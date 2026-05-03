@@ -238,6 +238,12 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 <div class="toast" id="toast"></div>
 
 <script>
+// Video view tracking (sessionStorage so same user doesn't count twice)
+function getViews(id){ return parseInt(localStorage.getItem('views_'+id)||'0'); }
+function addView(id){ localStorage.setItem('views_'+id, getViews(id)+1); }
+function hasWatched(id){ return localStorage.getItem('watched_'+id)==='1'; }
+function markWatched(id){ localStorage.setItem('watched_'+id,'1'); }
+
 const PLACES = [
   {
     id:1, name:"Parrilleros de Freddy", emoji:"🥩", score:"9.1", type:"taqueria",
@@ -245,6 +251,7 @@ const PLACES = [
     sub:"Parrilla · Cancún · Tu video aquí",
     tags:["Parrilla","Carnes","Cancún","Rodrigo recomienda"],
     tiktok:"https://www.tiktok.com/@rodrigobuenamadera/video/7616065204773784852",
+    video:"freddy.m4v",
     promos:[{title:"Orden de costillas 2x1",desc:"Todos los miércoles presentando Canyum",type:"2x1"}],
     reviews:[{u:"@foodieCancun",s:"9.2",t:"La mejor parrilla del centro, las costillas son increíbles."},{u:"Mike T.",s:"9.0",t:"Best BBQ in Cancún, highly recommend!"}],
     creator:true, hours:"Mar-Dom 1pm-11pm", phone:"+52 998 000 0001"
@@ -265,6 +272,7 @@ const PLACES = [
     sub:"Mariscos · Cancún · Tu video aquí",
     tags:["Mariscos","Ceviche","Culiacán","Rodrigo recomienda"],
     tiktok:"https://www.tiktok.com/@rodrigobuenamadera/video/7609097796938894612",
+    video:"muelle.m4v",
     promos:[{title:"Tostada de marlín GRATIS",desc:"Con cualquier orden de $200 MXN o más, presentando Canyum",type:"gratis"}],
     reviews:[{u:"Sofía L.",s:"9.0",t:"El ceviche de camarón es de otro nivel, fresquísimo."},{u:"David K.",s:"8.8",t:"Amazing seafood, very fresh. The shrimp ceviche is incredible."}],
     creator:true, hours:"Lun-Dom 10am-9pm", phone:"+52 998 000 0003"
@@ -285,6 +293,7 @@ const PLACES = [
     sub:"Tacos estilo CDMX · Cancún · Tu video aquí",
     tags:["Tacos CDMX","Suadero","Canasta","Rodrigo recomienda"],
     tiktok:"https://www.tiktok.com/@rodrigobuenamadera/video/7610680223226416404",
+    video:"takeros.m4v",
     promos:[{title:"Combo 5 tacos + agua",desc:"$85 MXN presentando Canyum en caja",type:"combo"}],
     reviews:[{u:"Jorge P.",s:"8.9",t:"Los tacos de suadero me transportaron directo a la CDMX."},{u:"María G.",s:"8.7",t:"Auténtico sabor chilango en Cancún, impresionante."}],
     creator:true, hours:"Lun-Dom 7am-4pm", phone:"+52 998 000 0005"
@@ -295,6 +304,7 @@ const PLACES = [
     sub:"Tacos rockeros · Cancún · Tu video aquí",
     tags:["Tacos","Rock","Único","Rodrigo recomienda"],
     tiktok:"https://www.tiktok.com/@rodrigobuenamadera/video/7605662533550083346",
+    video:"takorock.mov",
     promos:[{title:"Taco gratis con Canyum Ride",desc:"Llega en Canyum Ride y tu primer taco va por la casa",type:"gratis"}],
     reviews:[{u:"Roberto N.",s:"9.1",t:"El ambiente rockero + los tacos = experiencia única en Cancún."},{u:"Jake W.",s:"8.9",t:"Coolest taco spot ever, great vibes and even better tacos!"}],
     creator:true, hours:"Mar-Dom 6pm-2am", phone:"+52 998 000 0006"
@@ -469,8 +479,64 @@ function openD(i){
   }
 
   // Video
-  document.getElementById('dvtext').textContent=`@rodrigobuenamadera recomienda ${p.name}`;
-  document.getElementById('dvbox').onclick=()=>window.open(p.tiktok,'_blank');
+  const videoContainer = document.getElementById('dvbox');
+  const viewCount = getViews(p.id);
+  const watched = hasWatched(p.id);
+  if(p.video){
+    videoContainer.innerHTML = `
+      <div style="position:relative;background:#000;border-radius:10px;overflow:hidden;margin-bottom:8px">
+        <video id="canyumVideo" src="${p.video}" 
+          style="width:100%;max-height:280px;display:block;border-radius:10px" 
+          playsinline controls preload="metadata"
+          poster="">
+        </video>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <div style="font-size:12px;color:var(--gr)">@rodrigobuenamadera recomienda ${p.name}</div>
+        <div style="display:flex;align-items:center;gap:5px">
+          <span style="font-size:18px">👁️</span>
+          <span id="viewCounter" style="font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:var(--t)">${viewCount}</span>
+        </div>
+      </div>
+      <div style="font-size:11px;color:${watched?'var(--gr)':'var(--t)'}">
+        ${watched ? '✓ Ya contaste como vista' : '+50 🪙 si ves más de 10 segundos'}
+      </div>`;
+    
+    // Setup view tracking
+    setTimeout(()=>{
+      const vid = document.getElementById('canyumVideo');
+      if(!vid) return;
+      let tracked = false;
+      let watchTime = 0;
+      let lastTime = 0;
+      
+      vid.addEventListener('timeupdate', ()=>{
+        if(tracked || hasWatched(p.id)) return;
+        if(vid.currentTime > lastTime) watchTime += vid.currentTime - lastTime;
+        lastTime = vid.currentTime;
+        if(watchTime >= 10){
+          tracked = true;
+          markWatched(p.id);
+          addView(p.id);
+          const counter = document.getElementById('viewCounter');
+          if(counter) counter.textContent = getViews(p.id);
+          const hint = videoContainer.querySelector('div:last-child');
+          if(hint){ hint.textContent = '✓ Ya contaste como vista'; hint.style.color = 'var(--gr)'; }
+          // Coins animation
+          st('🪙 +50 Coins para @rodrigobuenamadera!');
+        }
+      });
+    }, 200);
+  } else {
+    videoContainer.innerHTML = `
+      <div style="text-align:center;padding:20px">
+        <div style="font-size:28px;margin-bottom:8px">🎥</div>
+        <div style="font-size:12px;color:var(--gr);margin-bottom:4px">@rodrigobuenamadera recomienda ${p.name}</div>
+        <button onclick="window.open('${p.tiktok}','_blank')" style="background:var(--t);border:none;color:var(--n);padding:8px 16px;border-radius:20px;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;cursor:pointer;margin-top:8px">▶ Ver en TikTok</button>
+      </div>
+      <div style="font-size:11px;color:var(--t);text-align:center">+50 🪙 si vas después de ver</div>`;
+  }
+  videoContainer.onclick = null;
 
   // Reviews
   document.getElementById('drv').innerHTML=(p.reviews||[]).map(r=>`
@@ -664,7 +730,7 @@ function toggleSheet(){expanded=!expanded;document.getElementById('bs').classLis
 let tt;
 function st(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),3000);}
 
-function openVideo(){if(currentPlace)window.open(currentPlace.tiktok,'_blank');}
+
 </script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCIGVhSiDUD2APdNVVTYZuQ9bUNBk9e2e8&callback=initMap&language=es&region=MX&loading=async" async defer></script>
 </body>
