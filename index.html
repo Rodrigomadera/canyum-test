@@ -24,7 +24,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 .chip{padding:5px 13px;border-radius:50px;border:1.5px solid rgba(0,180,166,0.3);background:transparent;color:var(--gr);font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0;font-family:'DM Sans',sans-serif;}
 .chip.active{background:var(--t);border-color:var(--t);color:var(--n);font-weight:700;}
 /* MAP */
-#map{position:fixed;top:102px;left:0;right:0;bottom:0;z-index:1;}
+#map{position:fixed;top:102px;left:0;right:0;bottom:0;z-index:1;height:calc(100vh - 102px);}
 /* COINS */
 .coins{position:fixed;top:114px;left:14px;z-index:999;background:rgba(13,27,42,0.92);border:1.5px solid rgba(245,166,35,0.5);border-radius:20px;padding:6px 12px;display:flex;align-items:center;gap:5px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--g);cursor:pointer;backdrop-filter:blur(8px);}
 /* ADD PIN BTN */
@@ -351,6 +351,8 @@ function initMap(){
   map.addListener('click',()=>{
     if(dragMode) return;
   });
+  // Force map to render correctly
+  setTimeout(()=>{ google.maps.event.trigger(map,'resize'); map.setCenter({lat:21.1450,lng:-86.8499}); }, 300);
 }
 
 function makeIcon(p){
