@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test Google Maps</title>
+<style>
+  body { margin: 0; font-family: Arial; background: #0D1B2A; color: white; }
+  #map { width: 100vw; height: 80vh; }
+  #status { padding: 16px; font-size: 14px; text-align: center; }
+</style>
+</head>
+<body>
+<div id="status">⏳ Cargando Google Maps...</div>
+<div id="map"></div>
+<script>
+function initMap() {
+  document.getElementById('status').innerHTML = '✅ API Key funciona — mapa cargado correctamente';
+  document.getElementById('status').style.color = '#00B4A6';
+  new google.maps.Map(document.getElementById('map'), {
+    center: { lat: 21.1619, lng: -86.8499 },
+    zoom: 14
+  });
+}
+function gm_authFailure() {
+  document.getElementById('status').innerHTML = '❌ API Key inválida o sin permisos — verifica en Google Cloud Console';
+  document.getElementById('status').style.color = '#FF5A5F';
+}
+window.onerror = function(msg) {
+  document.getElementById('status').innerHTML = '❌ Error: ' + msg;
+  document.getElementById('status').style.color = '#FF5A5F';
+};
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCIGVhSiDUD2APdNVVTYZuQ9bUNBk9e2e8&callback=initMap&language=es&region=MX" async defer></script>
+</body>
+</html>
