@@ -107,6 +107,73 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 .op-coords{background:var(--n);border-radius:10px;padding:10px;border:1px solid rgba(0,180,166,0.2);font-size:11px;color:var(--t);font-family:'Syne',sans-serif;margin-bottom:10px;}
 .promo-form{background:var(--n);border-radius:12px;padding:12px;border:1px solid rgba(245,166,35,0.2);margin-bottom:10px;}
 .pf-title{font-family:'Syne',sans-serif;font-weight:700;font-size:12px;color:var(--g);margin-bottom:8px;}
+
+/* SEARCH RESULTS */
+.search-results{position:fixed;top:56px;left:0;right:0;z-index:1100;background:var(--n2);border-bottom:2px solid var(--t);max-height:320px;overflow-y:auto;display:none;}
+.search-results.show{display:block;}
+.sr-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05);transition:background .2s;}
+.sr-item:hover{background:rgba(0,180,166,0.1);}
+.sr-emoji{font-size:22px;flex-shrink:0;}
+.sr-info{flex:1;}
+.sr-name{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;}
+.sr-meta{font-size:11px;color:var(--gr);margin-top:2px;}
+.sr-tag{font-size:10px;padding:2px 8px;border-radius:20px;background:rgba(0,180,166,0.15);color:var(--t);margin-left:auto;flex-shrink:0;}
+.sr-empty{padding:16px;text-align:center;color:var(--gr);font-size:13px;}
+
+/* ALBUM PANEL */
+.album-panel{position:fixed;top:0;right:-100%;bottom:0;width:min(380px,95vw);z-index:2000;background:var(--n2);border-left:1px solid rgba(0,180,166,0.2);transition:right .3s cubic-bezier(.4,0,.2,1);overflow-y:auto;display:flex;flex-direction:column;}
+.album-panel.open{right:0;}
+.album-header{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px;background:var(--n);position:sticky;top:0;z-index:10;}
+.album-title{font-family:'Syne',sans-serif;font-weight:800;font-size:16px;flex:1;}
+.album-close{background:none;border:none;color:var(--gr);font-size:18px;cursor:pointer;}
+.album-item{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05);transition:all .2s;}
+.album-item:hover{background:rgba(0,180,166,0.08);}
+.album-thumb{width:64px;height:64px;border-radius:12px;background:var(--n);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;border:1.5px solid rgba(0,180,166,0.2);position:relative;overflow:hidden;}
+.album-play{position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,0.7);border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:9px;}
+.album-info{flex:1;min-width:0;}
+.album-biz{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.album-creator{display:flex;align-items:center;gap:5px;margin-top:3px;}
+.album-avatar{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--n);flex-shrink:0;}
+.album-handle{font-size:11px;color:var(--gr);}
+.album-views{display:flex;align-items:center;gap:3px;margin-top:4px;}
+.album-view-count{font-size:11px;color:var(--t);font-weight:700;}
+.album-type{font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(0,180,166,0.15);color:var(--t);margin-top:4px;display:inline-block;}
+
+/* UPLOAD CREATOR MODAL */
+.creator-modal{position:fixed;top:0;left:0;right:0;bottom:0;z-index:4000;background:rgba(0,0,0,0.8);display:none;align-items:center;justify-content:center;padding:20px;}
+.creator-modal.show{display:flex;}
+.creator-box{background:var(--n2);border-radius:20px;border:1.5px solid rgba(0,180,166,0.3);width:100%;max-width:420px;max-height:90vh;overflow-y:auto;}
+.creator-header{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px;}
+.creator-header-title{font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:var(--t);flex:1;}
+.creator-header-close{background:none;border:none;color:var(--gr);font-size:18px;cursor:pointer;}
+.creator-body{padding:20px;}
+.creator-tabs{display:flex;gap:0;margin-bottom:20px;border-radius:10px;overflow:hidden;border:1.5px solid rgba(0,180,166,0.3);}
+.ctab{flex:1;padding:9px;background:transparent;border:none;color:var(--gr);font-family:'Syne',sans-serif;font-weight:700;font-size:12px;cursor:pointer;transition:all .2s;}
+.ctab.active{background:var(--t);color:var(--n);}
+.cform{display:none;}.cform.active{display:block;}
+.cf-label{font-size:11px;color:var(--gr);margin-bottom:4px;}
+.cf-input{width:100%;background:var(--n);border:1.5px solid rgba(0,180,166,0.3);border-radius:10px;padding:10px 14px;color:var(--w);font-size:13px;outline:none;font-family:'DM Sans',sans-serif;margin-bottom:10px;}
+.cf-input:focus{border-color:var(--t);}
+.cf-select{width:100%;background:var(--n);border:1.5px solid rgba(0,180,166,0.3);border-radius:10px;padding:10px 14px;color:var(--w);font-size:13px;outline:none;font-family:'DM Sans',sans-serif;margin-bottom:10px;}
+.cf-file{width:100%;background:var(--n);border:2px dashed rgba(0,180,166,0.4);border-radius:10px;padding:20px;text-align:center;cursor:pointer;margin-bottom:10px;transition:all .2s;}
+.cf-file:hover{border-color:var(--t);background:rgba(0,180,166,0.05);}
+.cf-file input{display:none;}
+.cf-btn{width:100%;padding:13px;border-radius:12px;border:none;background:var(--t);color:var(--n);font-family:'Syne',sans-serif;font-weight:800;font-size:14px;cursor:pointer;transition:all .2s;margin-top:5px;}
+.cf-btn:hover{background:#00D4C4;}
+
+/* OWNER VIDEOS */
+.ov-list{margin-top:10px;}
+.ov-item{background:var(--n);border-radius:10px;padding:10px;margin-bottom:8px;border:1px solid rgba(0,180,166,0.2);display:flex;align-items:center;gap:10px;}
+.ov-thumb{width:50px;height:50px;border-radius:8px;background:var(--n2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.ov-info{flex:1;}
+.ov-title{font-family:'Syne',sans-serif;font-weight:700;font-size:12px;}
+.ov-views{font-size:11px;color:var(--t);margin-top:2px;}
+.ov-del{background:var(--red);border:none;color:white;border-radius:8px;padding:4px 8px;font-size:10px;cursor:pointer;}
+
+/* UPLOAD VIDEO BTN */
+.upload-video-btn{background:var(--n);border:1.5px dashed rgba(0,180,166,0.4);border-radius:10px;padding:12px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;color:var(--t);font-family:'Syne',sans-serif;font-weight:700;font-size:12px;transition:all .2s;margin-bottom:10px;}
+.upload-video-btn:hover{border-color:var(--t);background:rgba(0,180,166,0.05);}
+
 /* TOAST */
 .toast{position:fixed;top:108px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--t);color:var(--n);font-family:'Syne',sans-serif;font-weight:700;font-size:13px;padding:9px 20px;border-radius:20px;box-shadow:0 6px 24px rgba(0,180,166,0.4);transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:5000;white-space:nowrap;pointer-events:none;}
 .toast.show{transform:translateX(-50%) translateY(0);}
@@ -119,9 +186,11 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 
 <div class="tb">
   <div class="logo">CAN<span>YUM</span></div>
-  <div class="sw"><span class="si">🔍</span><input type="text" placeholder="Busca tacos, mariscos, café..."></div>
+  <div class="sw"><span class="si">🔍</span><input type="text" id="searchInput" placeholder="Busca negocios, zonas, creadores..." oninput="handleSearch(this.value)" onfocus="handleSearch(this.value)" autocomplete="off"></div>
   <div class="av" onclick="st('👋 Hola Rodrigo!')">R</div>
 </div>
+
+<div class="search-results" id="searchResults"></div>
 
 <div class="chips">
   <button class="chip active" onclick="fp('all',this)">🗺️ Todo</button>
@@ -129,7 +198,8 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
   <button class="chip" onclick="fp('mariscos',this)">🦞 Mariscos</button>
   <button class="chip" onclick="fp('cafe',this)">☕ Café</button>
   <button class="chip" onclick="fp('promo',this)">🔥 Con Promo</button>
-  <button class="chip" onclick="fp('creator',this)">🎥 Mis videos</button>
+  <button class="chip" onclick="fp('creator',this)">🎥 Creadores</button>
+  <button class="chip" style="background:var(--g);border-color:var(--g);color:var(--n);font-weight:700" onclick="openCreatorModal()">📤 Sube tu video</button>
 </div>
 
 <div id="map"></div>
@@ -144,6 +214,83 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
   <div class="sh" onclick="toggleSheet()"></div>
   <div class="bst" id="bst">Tus lugares en Canyum · 6 negocios</div>
   <div class="cs" id="csc"></div>
+</div>
+
+
+<!-- ALBUM PANEL -->
+<div class="album-panel" id="albumPanel">
+  <div class="album-header">
+    <span style="font-size:20px">🎥</span>
+    <div class="album-title">Videos de Creadores</div>
+    <button class="album-close" onclick="closeAlbum()">✕</button>
+  </div>
+  <div id="albumList" style="flex:1"></div>
+</div>
+
+<!-- CREATOR UPLOAD MODAL -->
+<div class="creator-modal" id="creatorModal">
+  <div class="creator-box">
+    <div class="creator-header">
+      <span style="font-size:20px">🎥</span>
+      <div class="creator-header-title">Únete como Creador</div>
+      <button class="creator-header-close" onclick="closeCreatorModal()">✕</button>
+    </div>
+    <div class="creator-body">
+      <div class="creator-tabs">
+        <button class="ctab active" onclick="switchTab('register')">📝 Registrarme</button>
+        <button class="ctab" onclick="switchTab('upload')">📤 Subir video</button>
+      </div>
+      <!-- REGISTER FORM -->
+      <div class="cform active" id="registerForm">
+        <div style="text-align:center;margin-bottom:16px">
+          <div style="font-size:32px">🌮</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;margin-top:6px">Crea tu perfil de creador</div>
+          <div style="font-size:12px;color:var(--gr);margin-top:4px">Gana Coins por cada vista de tus videos</div>
+        </div>
+        <div class="cf-label">Nombre completo</div>
+        <input class="cf-input" id="regName" placeholder="Tu nombre">
+        <div class="cf-label">Usuario / Handle</div>
+        <input class="cf-input" id="regHandle" placeholder="@tuusuario">
+        <div class="cf-label">Email</div>
+        <input class="cf-input" id="regEmail" placeholder="tu@email.com" type="email">
+        <div class="cf-label">Ciudad</div>
+        <input class="cf-input" id="regCity" placeholder="Cancún, QRoo">
+        <div class="cf-label">¿Cómo supiste de Canyum?</div>
+        <select class="cf-select" id="regSource">
+          <option>Instagram</option>
+          <option>TikTok</option>
+          <option>Un amigo me recomendó</option>
+          <option>Busqué en Google</option>
+          <option>Un restaurante me invitó</option>
+        </select>
+        <button class="cf-btn" onclick="registerCreator()">🚀 Crear mi perfil</button>
+      </div>
+      <!-- UPLOAD FORM -->
+      <div class="cform" id="uploadForm">
+        <div style="text-align:center;margin-bottom:16px">
+          <div style="font-size:32px">📤</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;margin-top:6px">Sube tu video recomendación</div>
+          <div style="font-size:12px;color:var(--gr);margin-top:4px">Cada vista de 10s = +50 Coins para ti</div>
+        </div>
+        <div class="cf-label">Selecciona el negocio</div>
+        <select class="cf-select" id="upBiz"></select>
+        <div class="cf-label">Título del video</div>
+        <input class="cf-input" id="upTitle" placeholder="Ej: Los mejores tacos de Cancún 🌮">
+        <div class="cf-label">Tu video</div>
+        <div class="cf-file" onclick="document.getElementById('upFile').click()">
+          <input type="file" id="upFile" accept="video/*" onchange="previewVideo(this)">
+          <div id="upFileLabel">
+            <div style="font-size:28px;margin-bottom:6px">📹</div>
+            <div style="font-size:13px;color:var(--t);font-weight:600">Toca para seleccionar</div>
+            <div style="font-size:11px;color:var(--gr);margin-top:4px">MP4, MOV — máx 100MB</div>
+          </div>
+        </div>
+        <div class="cf-label">Descripción breve</div>
+        <input class="cf-input" id="upDesc" placeholder="¿Por qué recomiendas este lugar?">
+        <button class="cf-btn" style="background:var(--g);color:var(--n)" onclick="uploadVideo()">🎥 Publicar video</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- DETAIL PANEL -->
@@ -230,6 +377,23 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       <div id="opPromosList"></div>
     </div>
 
+    <!-- VIDEOS DEL PROPIETARIO -->
+    <div class="op-section">
+      <div class="op-sec-title">🎥 Videos del negocio</div>
+      <div style="font-size:12px;color:var(--gr);margin-bottom:10px">Sube videos propios de tu negocio — aparecerán en tu perfil de Canyum</div>
+      <div class="cf-file" onclick="document.getElementById('ownerVideoFile').click()" style="margin-bottom:10px">
+        <input type="file" id="ownerVideoFile" accept="video/*" onchange="previewOwnerVideo(this)" style="display:none">
+        <div id="ownerVideoLabel">
+          <div style="font-size:24px;margin-bottom:4px">📹</div>
+          <div style="font-size:12px;color:var(--t);font-weight:600">Toca para subir video</div>
+          <div style="font-size:11px;color:var(--gr);margin-top:2px">MP4, MOV — máx 100MB</div>
+        </div>
+      </div>
+      <input class="op-input" id="ownerVideoTitle" placeholder="Título del video (ej: Tour de nuestra cocina)" style="margin-bottom:8px">
+      <button class="op-btn op-btn-g" onclick="addOwnerVideo()">📤 Publicar video del negocio</button>
+      <div class="ov-list" id="ownerVideosList"></div>
+    </div>
+
     <!-- GUARDAR -->
     <button class="op-btn" onclick="saveOwner()">💾 Guardar cambios</button>
   </div>
@@ -252,6 +416,7 @@ const PLACES = [
     tags:["Parrilla","Carnes","Cancún","Rodrigo recomienda"],
     tiktok:"https://www.tiktok.com/@rodrigobuenamadera/video/7616065204773784852",
     video:"freddy.m4v",
+    creator_name:"Rodrigo Madera",creator_handle:"@rodrigobuenamadera",creator_avatar:"R",creator_color:"#00B4A6",owner_videos:[],
     promos:[{title:"Orden de costillas 2x1",desc:"Todos los miércoles presentando Canyum",type:"2x1"}],
     reviews:[{u:"@foodieCancun",s:"9.2",t:"La mejor parrilla del centro, las costillas son increíbles."},{u:"Mike T.",s:"9.0",t:"Best BBQ in Cancún, highly recommend!"}],
     creator:true, hours:"Mar-Dom 1pm-11pm", phone:"+52 998 000 0001"
@@ -262,6 +427,7 @@ const PLACES = [
     sub:"Carnitas · Cancún · Tu video aquí",
     tags:["Carnitas","Tacos","Tradicional","Rodrigo recomienda"],
     tiktok:"https://www.tiktok.com/@rodrigobuenamadera/video/7623512838371347729",
+    video:null,creator_name:"Rodrigo Madera",creator_handle:"@rodrigobuenamadera",creator_avatar:"R",creator_color:"#00B4A6",owner_videos:[],
     promos:[{title:"Kilo de carnitas + tortillas",desc:"Precio especial para clientes Canyum: $180 MXN",type:"descuento"}],
     reviews:[{u:"Carlos M.",s:"9.5",t:"Las carnitas más jugosas de Cancún, sin discusión."},{u:"Ana R.",s:"9.1",t:"Auténtico sabor michoacano, imperdible."}],
     creator:true, hours:"Sáb-Dom 8am-3pm", phone:"+52 998 000 0002"
@@ -273,6 +439,7 @@ const PLACES = [
     tags:["Mariscos","Ceviche","Culiacán","Rodrigo recomienda"],
     tiktok:"https://www.tiktok.com/@rodrigobuenamadera/video/7609097796938894612",
     video:"muelle.m4v",
+    creator_name:"Rodrigo Madera",creator_handle:"@rodrigobuenamadera",creator_avatar:"R",creator_color:"#00B4A6",owner_videos:[],
     promos:[{title:"Tostada de marlín GRATIS",desc:"Con cualquier orden de $200 MXN o más, presentando Canyum",type:"gratis"}],
     reviews:[{u:"Sofía L.",s:"9.0",t:"El ceviche de camarón es de otro nivel, fresquísimo."},{u:"David K.",s:"8.8",t:"Amazing seafood, very fresh. The shrimp ceviche is incredible."}],
     creator:true, hours:"Lun-Dom 10am-9pm", phone:"+52 998 000 0003"
@@ -283,6 +450,7 @@ const PLACES = [
     sub:"Café · Cancún · Tu video aquí",
     tags:["Café","Cold brew","Brunch","Rodrigo recomienda"],
     tiktok:"https://www.tiktok.com/@rodrigobuenamadera/video/7621988418901298439",
+    video:null,creator_name:"Rodrigo Madera",creator_handle:"@rodrigobuenamadera",creator_avatar:"R",creator_color:"#00B4A6",owner_videos:[],
     promos:[{title:"2do café al 50%",desc:"Válido de 2pm-5pm de lunes a viernes con Canyum",type:"descuento"},{title:"Doble Canyum Coins",desc:"Esta semana gana el doble de Coins en cada visita",type:"coins"}],
     reviews:[{u:"Valeria T.",s:"8.9",t:"El cold brew más rico de Cancún, ambiente increíble para trabajar."},{u:"Emma S.",s:"8.5",t:"Lovely café, great atmosphere and amazing coffee!"}],
     creator:true, hours:"Lun-Sáb 7am-9pm", phone:"+52 998 000 0004"
@@ -294,6 +462,7 @@ const PLACES = [
     tags:["Tacos CDMX","Suadero","Canasta","Rodrigo recomienda"],
     tiktok:"https://www.tiktok.com/@rodrigobuenamadera/video/7610680223226416404",
     video:"takeros.m4v",
+    creator_name:"Rodrigo Madera",creator_handle:"@rodrigobuenamadera",creator_avatar:"R",creator_color:"#00B4A6",owner_videos:[],
     promos:[{title:"Combo 5 tacos + agua",desc:"$85 MXN presentando Canyum en caja",type:"combo"}],
     reviews:[{u:"Jorge P.",s:"8.9",t:"Los tacos de suadero me transportaron directo a la CDMX."},{u:"María G.",s:"8.7",t:"Auténtico sabor chilango en Cancún, impresionante."}],
     creator:true, hours:"Lun-Dom 7am-4pm", phone:"+52 998 000 0005"
@@ -305,6 +474,7 @@ const PLACES = [
     tags:["Tacos","Rock","Único","Rodrigo recomienda"],
     tiktok:"https://www.tiktok.com/@rodrigobuenamadera/video/7605662533550083346",
     video:"takorock.mov",
+    creator_name:"Rodrigo Madera",creator_handle:"@rodrigobuenamadera",creator_avatar:"R",creator_color:"#00B4A6",owner_videos:[],
     promos:[{title:"Taco gratis con Canyum Ride",desc:"Llega en Canyum Ride y tu primer taco va por la casa",type:"gratis"}],
     reviews:[{u:"Roberto N.",s:"9.1",t:"El ambiente rockero + los tacos = experiencia única en Cancún."},{u:"Jake W.",s:"8.9",t:"Coolest taco spot ever, great vibes and even better tacos!"}],
     creator:true, hours:"Mar-Dom 6pm-2am", phone:"+52 998 000 0006"
@@ -569,6 +739,7 @@ function openOwner(){
   document.getElementById('opPhone').value=p.phone||'';
   document.getElementById('opCoords').textContent=`Lat: ${p.lat.toFixed(6)} | Lng: ${p.lng.toFixed(6)}`;
   renderOwnerPromos(p);
+  renderOwnerVideos(p);
   document.getElementById('ownerPanel').classList.add('open');
   document.getElementById('overlay').classList.add('show');
 }
@@ -714,9 +885,19 @@ function fp(type,el){
   document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
   el.classList.add('active');
   const a=allP();
+  
+  if(type==='creator'){
+    openAlbum();
+    // Show all markers
+    a.forEach((p,i)=>{ if(markers[i]) markers[i].setVisible(true); });
+    buildCards(a);
+    document.getElementById('bst').textContent=`${a.filter(p=>p.video).length} videos de creadores`;
+    return;
+  }
+  
+  closeAlbum();
   const f=type==='all'?a:
     type==='promo'?a.filter(p=>p.promos&&p.promos.length):
-    type==='creator'?a.filter(p=>p.creator):
     a.filter(p=>p.type===type);
   document.getElementById('bst').textContent=`${f.length} lugar${f.length!==1?'es':''} encontrado${f.length!==1?'s':''}`;
   Object.values(markers).forEach(m=>m.setVisible(false));
