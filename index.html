@@ -24,7 +24,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 .chip{padding:5px 13px;border-radius:50px;border:1.5px solid rgba(0,180,166,0.3);background:transparent;color:var(--gr);font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0;font-family:'DM Sans',sans-serif;}
 .chip.active{background:var(--t);border-color:var(--t);color:var(--n);font-weight:700;}
 /* MAP */
-#map{position:fixed;top:102px;left:0;right:0;bottom:0;z-index:1;min-height:400px;}
+#map{position:fixed;top:102px;left:0;right:0;bottom:0;z-index:1;}
 /* COINS */
 .coins{position:fixed;top:114px;left:14px;z-index:999;background:rgba(13,27,42,0.92);border:1.5px solid rgba(245,166,35,0.5);border-radius:20px;padding:6px 12px;display:flex;align-items:center;gap:5px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--g);cursor:pointer;backdrop-filter:blur(8px);}
 /* ADD PIN BTN */
@@ -314,6 +314,9 @@ const DARK_STYLE=[
   {featureType:"water",elementType:"labels.text.fill",stylers:[{color:"#00b4a6"}]},
   {featureType:"administrative",elementType:"geometry.stroke",stylers:[{color:"#194a6e"}]},
   {featureType:"transit",elementType:"geometry",stylers:[{color:"#0f2535"}]},
+  {featureType:"poi",stylers:[{visibility:"off"}]},
+  {featureType:"poi.business",stylers:[{visibility:"off"}]},
+  {featureType:"transit",stylers:[{visibility:"off"}]},
 ];
 
 let map, markers={}, dragMarker=null, dragMode=false, currentPlace=null, currentOwnerIdx=null;
@@ -328,6 +331,11 @@ function initMap(){
     disableDefaultUI:true,
     gestureHandling:'greedy',
     clickableIcons:false,
+    styles:[
+      {featureType:"poi",stylers:[{visibility:"off"}]},
+      {featureType:"poi.business",stylers:[{visibility:"off"}]},
+      {featureType:"transit",stylers:[{visibility:"off"}]},
+    ],
   });
   allP().forEach((p,i)=>addMarker(p,i));
   buildCards(allP());
@@ -353,25 +361,40 @@ function makeIcon(p){
   };
 }
 
-function makePinEl(p){
-  const color=p.promos&&p.promos.length?'#F5A623':'#00B4A6';
-  const textColor='#0D1B2A';
-  const el=document.createElement('div');
-  el.style.cssText=`display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:20px;background:${color};box-shadow:0 3px 10px rgba(0,0,0,0.5);cursor:pointer;position:relative;white-space:nowrap;font-family:Arial,sans-serif;`;
-  el.innerHTML=`<span style="font-size:13px">${p.emoji}</span><span style="font-weight:800;font-size:11px;color:${textColor}">${p.name.length>12?p.name.substring(0,11)+'…':p.name}</span><span style="font-size:10px;font-weight:700;color:${textColor};opacity:0.8">${p.score}</span><div style="position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:${color}"></div>`;
-  return el;
+function makePinSVG(p, selected=false){
+  const color = p.promos&&p.promos.length ? '#F5A623' : '#00B4A6';
+  const bg = selected ? '#ffffff' : color;
+  const border = selected ? '#00B4A6' : color;
+  const textColor = '#0D1B2A';
+  const name = p.name.length>11 ? p.name.substring(0,10)+'…' : p.name;
+  const w = selected ? 140 : 120;
+  const h = selected ? 42 : 36;
+  const fs = selected ? 13 : 11;
+  const efs = selected ? 16 : 14;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h+10}">
+    <rect rx="18" width="${w}" height="${h}" fill="${bg}" stroke="${border}" stroke-width="${selected?3:2}"/>
+    <text x="12" y="${h*0.65}" font-size="${efs}" font-family="Arial">${p.emoji}</text>
+    <text x="34" y="${h*0.65}" font-size="${fs}" font-family="Arial" font-weight="bold" fill="${textColor}">${name}</text>
+    <text x="${w-18}" y="${h*0.65}" font-size="10" font-family="Arial" font-weight="bold" fill="${p.promos&&p.promos.length?'#0D1B2A':'#00B4A6'}" text-anchor="middle">${p.score}</text>
+    <polygon points="${w/2-6},${h} ${w/2},${h+8} ${w/2+6},${h}" fill="${bg}"/>
+  </svg>`;
+  return {
+    url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
+    scaledSize: new google.maps.Size(w, h+10),
+    anchor: new google.maps.Point(w/2, h+10),
+  };
 }
 
 function addMarker(p,i){
-  const pinEl=makePinEl(p);
-  const m=new google.maps.marker.AdvancedMarkerElement({
+  const m=new google.maps.Marker({
     position:{lat:p.lat,lng:p.lng},
     map,
-    content:pinEl,
+    icon:makePinSVG(p,false),
+    draggable:true,
     title:p.name,
-    gmpDraggable:true,
+    optimized:false,
   });
-  pinEl.addEventListener('click',()=>openD(i));
+  m.addListener('click',()=>openD(i));
   m.addListener('dragend',(e)=>{
     p.lat=e.latLng.lat();
     p.lng=e.latLng.lng();
@@ -444,10 +467,20 @@ function openD(i){
     <div class="rv"><div class="rh"><div class="rav">${r.u[0]}</div><span class="rn">${r.u}</span><span class="rs">⭐${r.s}</span></div>
     <div class="rt">${r.t}</div></div>`).join('');
 
+  // Highlight selected pin, reset others
+  allP().forEach((place,idx)=>{
+    if(markers[idx]) markers[idx].setIcon(makePinSVG(place, place===p));
+  });
   map.panTo({lat:p.lat,lng:p.lng});
+  map.setZoom(16);
   document.getElementById('dp').classList.add('open');
 }
-function closeD(){document.getElementById('dp').classList.remove('open');}
+function closeD(){
+  document.getElementById('dp').classList.remove('open');
+  allP().forEach((place,idx)=>{
+    if(markers[idx]) markers[idx].setIcon(makePinSVG(place,false));
+  });
+}
 
 function openOwner(){
   if(!currentPlace) return;
@@ -548,15 +581,17 @@ function toggleDrag(){
     // Add new draggable pin
     const center=map.getCenter();
     if(dragMarker) dragMarker.setMap(null);
-    const dragEl=document.createElement('div');
-    dragEl.style.cssText='width:40px;height:40px;border-radius:50%;background:#FF5A5F;border:3px solid white;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 12px rgba(0,0,0,0.5);cursor:grab;';
-    dragEl.textContent='📍';
-    dragMarker=new google.maps.marker.AdvancedMarkerElement({
+    dragMarker=new google.maps.Marker({
       position:center,
       map,
-      content:dragEl,
+      draggable:true,
       title:'Nuevo lugar',
-      gmpDraggable:true,
+      icon:{
+        url:'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="44" height="54"><circle cx="22" cy="22" r="20" fill="#FF5A5F" stroke="white" stroke-width="3"/><text x="22" y="29" text-anchor="middle" font-size="20" font-family="Arial">📍</text><polygon points="16,40 22,54 28,40" fill="#FF5A5F"/></svg>'),
+        scaledSize:new google.maps.Size(44,54),
+        anchor:new google.maps.Point(22,54),
+      },
+      optimized:false,
     });
     dragMarker.addListener('dragend',(e)=>{
       const lat=e.latLng.lat(), lng=e.latLng.lng();
@@ -621,6 +656,6 @@ function st(msg){const t=document.getElementById('toast');t.textContent=msg;t.cl
 
 function openVideo(){if(currentPlace)window.open(currentPlace.tiktok,'_blank');}
 </script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCIGVhSiDUD2APdNVVTYZuQ9bUNBk9e2e8&callback=initMap&language=es&region=MX&loading=async&libraries=marker" async defer></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCIGVhSiDUD2APdNVVTYZuQ9bUNBk9e2e8&callback=initMap&language=es&region=MX&loading=async" async defer></script>
 </body>
 </html>
