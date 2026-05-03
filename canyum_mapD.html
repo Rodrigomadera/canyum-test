@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Canyum — Mapa Cancún</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--t:#00B4A6;--g:#F5A623;--n:#0D1B2A;--n2:#132333;--gr:#64748B;--w:#fff;--red:#FF5A5F;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;background:var(--n);color:var(--w);}
+/* TOPBAR */
+.tb{position:fixed;top:0;left:0;right:0;z-index:1000;display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(13,27,42,0.97);border-bottom:1px solid rgba(0,180,166,0.25);backdrop-filter:blur(12px);}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;letter-spacing:3px;flex-shrink:0;}
+.logo span{color:var(--t);}
+.sw{flex:1;position:relative;}
+.sw input{width:100%;background:var(--n2);border:1.5px solid rgba(0,180,166,0.3);border-radius:50px;padding:8px 16px 8px 36px;color:var(--w);font-size:13px;outline:none;font-family:'DM Sans',sans-serif;}
+.sw input::placeholder{color:var(--gr);}
+.si{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;}
+.av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--t),var(--g));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;cursor:pointer;}
+/* CHIPS */
+.chips{position:fixed;top:56px;left:0;right:0;z-index:1000;display:flex;gap:7px;padding:8px 12px;background:rgba(13,27,42,0.95);border-bottom:1px solid rgba(255,255,255,0.05);overflow-x:auto;scrollbar-width:none;backdrop-filter:blur(10px);}
+.chips::-webkit-scrollbar{display:none;}
+.chip{padding:5px 13px;border-radius:50px;border:1.5px solid rgba(0,180,166,0.3);background:transparent;color:var(--gr);font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0;font-family:'DM Sans',sans-serif;}
+.chip.active{background:var(--t);border-color:var(--t);color:var(--n);font-weight:700;}
+/* MAP */
+#map{position:fixed;top:102px;left:0;right:0;bottom:0;z-index:1;}
+/* COINS */
+.coins{position:fixed;top:114px;left:14px;z-index:999;background:rgba(13,27,42,0.92);border:1.5px solid rgba(245,166,35,0.5);border-radius:20px;padding:6px 12px;display:flex;align-items:center;gap:5px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--g);cursor:pointer;backdrop-filter:blur(8px);}
+/* ADD PIN BTN */
+.apb{position:fixed;top:114px;right:14px;z-index:999;background:var(--t);border:none;border-radius:50px;padding:8px 16px;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;color:var(--n);cursor:pointer;box-shadow:0 4px 16px rgba(0,180,166,0.4);transition:all .2s;}
+.apb.on{background:var(--red);}
+/* DRAG BANNER */
+.drag-banner{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2000;background:var(--g);color:var(--n);font-family:'Syne',sans-serif;font-weight:800;font-size:14px;padding:14px 24px;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.5);text-align:center;pointer-events:none;opacity:0;transition:opacity .3s;}
+.drag-banner.show{opacity:1;}
+/* COORDS DISPLAY */
+.coords-box{position:fixed;bottom:175px;left:50%;transform:translateX(-50%);z-index:999;background:rgba(13,27,42,0.95);border:1.5px solid var(--t);border-radius:12px;padding:8px 16px;font-size:12px;color:var(--t);font-family:'Syne',sans-serif;font-weight:700;display:none;backdrop-filter:blur(8px);}
+.coords-box.show{display:block;}
+/* BOTTOM SHEET */
+.bs{position:fixed;bottom:0;left:0;right:0;z-index:999;background:var(--n2);border-radius:20px 20px 0 0;border-top:1px solid rgba(0,180,166,0.2);transition:transform .35s cubic-bezier(.4,0,.2,1);transform:translateY(calc(100% - 158px));max-height:68vh;}
+.bs.ex{transform:translateY(0);overflow-y:auto;}
+.sh{width:40px;height:4px;background:rgba(255,255,255,0.18);border-radius:2px;margin:10px auto 10px;cursor:pointer;}
+.bst{padding:0 16px 10px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--gr);text-transform:uppercase;letter-spacing:1px;}
+.cs{display:flex;gap:10px;padding:0 14px 16px;overflow-x:auto;scrollbar-width:none;}
+.cs::-webkit-scrollbar{display:none;}
+/* CARD */
+.card{flex-shrink:0;width:200px;background:var(--n);border-radius:14px;border:1.5px solid rgba(0,180,166,0.15);cursor:pointer;transition:all .2s;overflow:hidden;}
+.card:hover{border-color:var(--t);transform:translateY(-2px);}
+.ci{height:88px;display:flex;align-items:center;justify-content:center;font-size:38px;position:relative;background:var(--n2);}
+.cbg2{position:absolute;top:7px;right:7px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;font-family:'Syne',sans-serif;}
+.bt{background:var(--t);color:var(--n);}.bgg{background:var(--g);color:var(--n);}
+.cbd{padding:9px 11px;}
+.cn{font-family:'Syne',sans-serif;font-weight:700;font-size:12px;margin-bottom:3px;}
+.cm{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--gr);}
+.csc{background:var(--t);color:var(--n);font-weight:800;font-size:10px;padding:2px 6px;border-radius:5px;}
+.ca{display:flex;gap:5px;padding:0 11px 10px;}
+.ba{flex:1;padding:6px 0;border-radius:9px;border:none;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+.br{background:var(--t);color:var(--n);}.bd{background:var(--g);color:var(--n);}
+/* DETAIL PANEL */
+.dp{position:fixed;top:0;right:-100%;bottom:0;width:min(380px,95vw);z-index:2000;background:var(--n2);border-left:1px solid rgba(0,180,166,0.2);transition:right .3s cubic-bezier(.4,0,.2,1);overflow-y:auto;}
+.dp.open{right:0;}
+.dh{height:160px;display:flex;align-items:center;justify-content:center;font-size:64px;position:relative;background:var(--n);}
+.dclose{position:absolute;top:10px;left:10px;width:32px;height:32px;border-radius:50%;background:rgba(13,27,42,0.85);border:none;color:white;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.downer{position:absolute;top:10px;right:10px;background:var(--g);color:var(--n);font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;font-family:'Syne',sans-serif;cursor:pointer;}
+.dscore{position:absolute;bottom:10px;right:10px;background:var(--t);color:var(--n);font-family:'Syne',sans-serif;font-weight:800;font-size:20px;padding:5px 12px;border-radius:10px;}
+.dbody{padding:14px;}
+.dn{font-family:'Syne',sans-serif;font-weight:800;font-size:18px;margin-bottom:3px;}
+.ds{color:var(--gr);font-size:12px;margin-bottom:10px;}
+.dtags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;}
+.dtags span{font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid rgba(0,180,166,0.3);color:var(--t);}
+.dacts{display:flex;gap:7px;margin-bottom:14px;}
+.dab{flex:1;padding:11px;border-radius:12px;border:none;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;}
+.dar{background:var(--t);color:var(--n);}.dad{background:var(--g);color:var(--n);}
+.sec{font-family:'Syne',sans-serif;font-weight:700;font-size:11px;color:var(--gr);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;margin-top:14px;}
+/* PROMOS */
+.promo-card{background:linear-gradient(135deg,rgba(0,180,166,0.15),rgba(245,166,35,0.1));border:1.5px solid rgba(0,180,166,0.3);border-radius:12px;padding:12px;margin-bottom:8px;}
+.promo-title{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--g);margin-bottom:4px;}
+.promo-desc{font-size:12px;color:var(--gr);line-height:1.5;}
+.promo-badge{display:inline-block;background:var(--red);color:white;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-bottom:6px;font-family:'Syne',sans-serif;}
+/* VIDEO BOX */
+.vbox{background:var(--n);border-radius:12px;padding:14px;text-align:center;border:1px solid rgba(0,180,166,0.2);margin-bottom:14px;cursor:pointer;transition:all .2s;}
+.vbox:hover{border-color:var(--t);}
+/* REVIEWS */
+.rv{background:var(--n);border-radius:10px;padding:9px 11px;margin-bottom:7px;border:1px solid rgba(255,255,255,0.05);}
+.rh{display:flex;align-items:center;gap:7px;margin-bottom:5px;}
+.rav{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--t),var(--g));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--n);}
+.rn{font-weight:600;font-size:12px;}.rs{margin-left:auto;color:var(--g);font-size:11px;font-weight:700;}.rt{font-size:11px;color:var(--gr);line-height:1.5;}
+/* OWNER PANEL */
+.owner-panel{position:fixed;top:0;left:-100%;bottom:0;width:min(380px,95vw);z-index:3000;background:var(--n2);border-right:1px solid rgba(245,166,35,0.3);transition:left .3s cubic-bezier(.4,0,.2,1);overflow-y:auto;}
+.owner-panel.open{left:0;}
+.op-header{background:linear-gradient(135deg,var(--n),var(--n2));padding:16px;border-bottom:1px solid rgba(245,166,35,0.2);display:flex;align-items:center;gap:10px;}
+.op-title{font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:var(--g);}
+.op-close{margin-left:auto;background:none;border:none;color:var(--gr);font-size:18px;cursor:pointer;}
+.op-body{padding:16px;}
+.op-section{margin-bottom:20px;}
+.op-sec-title{font-family:'Syne',sans-serif;font-weight:700;font-size:12px;color:var(--t);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+.op-field{margin-bottom:10px;}
+.op-label{font-size:11px;color:var(--gr);margin-bottom:4px;}
+.op-input{width:100%;background:var(--n);border:1.5px solid rgba(0,180,166,0.3);border-radius:10px;padding:9px 12px;color:var(--w);font-size:13px;outline:none;font-family:'DM Sans',sans-serif;transition:border-color .2s;}
+.op-input:focus{border-color:var(--t);}
+.op-textarea{width:100%;background:var(--n);border:1.5px solid rgba(0,180,166,0.3);border-radius:10px;padding:9px 12px;color:var(--w);font-size:13px;outline:none;font-family:'DM Sans',sans-serif;resize:vertical;min-height:70px;}
+.op-select{width:100%;background:var(--n);border:1.5px solid rgba(0,180,166,0.3);border-radius:10px;padding:9px 12px;color:var(--w);font-size:13px;outline:none;font-family:'DM Sans',sans-serif;}
+.op-btn{width:100%;padding:12px;border-radius:12px;border:none;background:var(--t);color:var(--n);font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer;margin-bottom:8px;transition:all .2s;}
+.op-btn:hover{background:#00D4C4;}
+.op-btn-g{background:var(--g);color:var(--n);}
+.op-btn-g:hover{filter:brightness(1.1);}
+.op-coords{background:var(--n);border-radius:10px;padding:10px;border:1px solid rgba(0,180,166,0.2);font-size:11px;color:var(--t);font-family:'Syne',sans-serif;margin-bottom:10px;}
+.promo-form{background:var(--n);border-radius:12px;padding:12px;border:1px solid rgba(245,166,35,0.2);margin-bottom:10px;}
+.pf-title{font-family:'Syne',sans-serif;font-weight:700;font-size:12px;color:var(--g);margin-bottom:8px;}
+/* TOAST */
+.toast{position:fixed;top:108px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--t);color:var(--n);font-family:'Syne',sans-serif;font-weight:700;font-size:13px;padding:9px 20px;border-radius:20px;box-shadow:0 6px 24px rgba(0,180,166,0.4);transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:5000;white-space:nowrap;pointer-events:none;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+/* OVERLAY */
+.overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:2500;display:none;}
+.overlay.show{display:block;}
+</style>
+</head>
+<body>
+
+<div class="tb">
+  <div class="logo">CAN<span>YUM</span></div>
+  <div class="sw"><span class="si">🔍</span><input type="text" placeholder="Busca tacos, mariscos, café..."></div>
+  <div class="av" onclick="st('👋 Hola Rodrigo!')">R</div>
+</div>
+
+<div class="chips">
+  <button class="chip active" onclick="fp('all',this)">🗺️ Todo</button>
+  <button class="chip" onclick="fp('taqueria',this)">🌮 Tacos</button>
+  <button class="chip" onclick="fp('mariscos',this)">🦞 Mariscos</button>
+  <button class="chip" onclick="fp('cafe',this)">☕ Café</button>
+  <button class="chip" onclick="fp('promo',this)">🔥 Con Promo</button>
+  <button class="chip" onclick="fp('creator',this)">🎥 Mis videos</button>
+</div>
+
+<div id="map"></div>
+
+<div class="coins" onclick="st('🪙 Tienes 340 Canyum Coins — ¡sigue explorando!')">🪙 340</div>
+<button class="apb" id="apb" onclick="toggleDrag()">📍 Agregar lugar</button>
+<div class="drag-banner" id="dragBanner">📍 Arrastra el pin rojo al lugar exacto</div>
+<div class="coords-box" id="coordsBox"></div>
+
+<!-- BOTTOM SHEET -->
+<div class="bs" id="bs">
+  <div class="sh" onclick="toggleSheet()"></div>
+  <div class="bst" id="bst">Tus lugares en Canyum · 6 negocios</div>
+  <div class="cs" id="csc"></div>
+</div>
+
+<!-- DETAIL PANEL -->
+<div class="dp" id="dp">
+  <div class="dh" id="dh">
+    <button class="dclose" onclick="closeD()">✕</button>
+    <span id="de"></span>
+    <button class="downer" onclick="openOwner()">🏪 Propietario</button>
+    <div class="dscore" id="dscv"></div>
+  </div>
+  <div class="dbody">
+    <div class="dn" id="dna"></div>
+    <div class="ds" id="dsu"></div>
+    <div class="dtags" id="dtg"></div>
+    <div class="dacts" id="dac"></div>
+    <div class="sec" id="promoSec" style="display:none">🔥 PROMOCIONES ACTIVAS</div>
+    <div id="dpromos"></div>
+    <div class="sec">🎥 VIDEO DEL CREADOR</div>
+    <div class="vbox" id="dvbox" onclick="openVideo()">
+      <div style="font-size:28px;margin-bottom:6px">▶️</div>
+      <div style="font-size:12px;color:var(--gr)" id="dvtext"></div>
+      <div style="font-size:11px;color:var(--t);margin-top:4px">+50 🪙 si vas después de ver</div>
+    </div>
+    <div class="sec">💬 RESEÑAS</div>
+    <div id="drv"></div>
+  </div>
+</div>
+
+<!-- OWNER PANEL -->
+<div class="overlay" id="overlay" onclick="closeOwner()"></div>
+<div class="owner-panel" id="ownerPanel">
+  <div class="op-header">
+    <span style="font-size:20px">🏪</span>
+    <div>
+      <div class="op-title">Panel del Propietario</div>
+      <div style="font-size:11px;color:var(--gr)" id="ownerName"></div>
+    </div>
+    <button class="op-close" onclick="closeOwner()">✕</button>
+  </div>
+  <div class="op-body">
+
+    <!-- INFO -->
+    <div class="op-section">
+      <div class="op-sec-title">📋 Información del negocio</div>
+      <div class="op-field"><div class="op-label">Nombre del lugar</div><input class="op-input" id="opName" placeholder="Nombre"></div>
+      <div class="op-field"><div class="op-label">Descripción corta</div><textarea class="op-textarea" id="opDesc" placeholder="Describe tu negocio..."></textarea></div>
+      <div class="op-field"><div class="op-label">Horario</div><input class="op-input" id="opHours" placeholder="Ej: Lun-Sáb 8am-10pm"></div>
+      <div class="op-field"><div class="op-label">WhatsApp / Teléfono</div><input class="op-input" id="opPhone" placeholder="+52 998 000 0000"></div>
+      <div class="op-field"><div class="op-label">Categoría</div>
+        <select class="op-select" id="opCat">
+          <option value="taqueria">🌮 Tacos / Mexicana</option>
+          <option value="mariscos">🦞 Mariscos</option>
+          <option value="cafe">☕ Café</option>
+          <option value="otro">🍽️ Otro</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- UBICACION -->
+    <div class="op-section">
+      <div class="op-sec-title">📍 Ubicación exacta</div>
+      <div class="op-coords" id="opCoords">Coordenadas actuales del pin</div>
+      <button class="op-btn" onclick="startDragFromOwner()">🔄 Mover pin en el mapa</button>
+    </div>
+
+    <!-- PROMOS -->
+    <div class="op-section">
+      <div class="op-sec-title">🔥 Agregar promoción</div>
+      <div class="promo-form">
+        <div class="pf-title">Nueva promoción</div>
+        <div class="op-field"><div class="op-label">Título de la promo</div><input class="op-input" id="opPromoTitle" placeholder="Ej: 2x1 en tacos los martes"></div>
+        <div class="op-field"><div class="op-label">Descripción</div><textarea class="op-textarea" id="opPromoDesc" placeholder="Detalles de la promoción..." style="min-height:50px"></textarea></div>
+        <div class="op-field"><div class="op-label">Tipo</div>
+          <select class="op-select" id="opPromoType">
+            <option value="descuento">💰 Descuento</option>
+            <option value="2x1">🎁 2x1</option>
+            <option value="combo">🍽️ Combo especial</option>
+            <option value="coins">🪙 Doble Coins</option>
+            <option value="gratis">✨ Gratis con Canyum Ride</option>
+          </select>
+        </div>
+        <button class="op-btn op-btn-g" onclick="addPromo()">+ Publicar promoción</button>
+      </div>
+      <div id="opPromosList"></div>
+    </div>
+
+    <!-- GUARDAR -->
+    <button class="op-btn" onclick="saveOwner()">💾 Guardar cambios</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const PLACES = [
+  {
+    id:1, name:"Parrilleros de Freddy", emoji:"🥩", score:"9.1", type:"taqueria",
+    lat:21.119874, lng:-86.870504,
+    sub:"Parrilla · Cancún · Tu video aquí",
+    tags:["Parrilla","Carnes","Cancún","Rodrigo recomienda"],
+    tiktok:"https://www.tiktok.com/@rodrigobuenamadera/video/7616065204773784852",
+    promos:[{title:"Orden de costillas 2x1",desc:"Todos los miércoles presentando Canyum",type:"2x1"}],
+    reviews:[{u:"@foodieCancun",s:"9.2",t:"La mejor parrilla del centro, las costillas son increíbles."},{u:"Mike T.",s:"9.0",t:"Best BBQ in Cancún, highly recommend!"}],
+    creator:true, hours:"Mar-Dom 1pm-11pm", phone:"+52 998 000 0001"
+  },
+  {
+    id:2, name:"Tacos de Carnitas El Polilla", emoji:"🌮", score:"9.3", type:"taqueria",
+    lat:21.1583214, lng:-86.8240469,
+    sub:"Carnitas · Cancún · Tu video aquí",
+    tags:["Carnitas","Tacos","Tradicional","Rodrigo recomienda"],
+    tiktok:"https://www.tiktok.com/@rodrigobuenamadera/video/7623512838371347729",
+    promos:[{title:"Kilo de carnitas + tortillas",desc:"Precio especial para clientes Canyum: $180 MXN",type:"descuento"}],
+    reviews:[{u:"Carlos M.",s:"9.5",t:"Las carnitas más jugosas de Cancún, sin discusión."},{u:"Ana R.",s:"9.1",t:"Auténtico sabor michoacano, imperdible."}],
+    creator:true, hours:"Sáb-Dom 8am-3pm", phone:"+52 998 000 0002"
+  },
+  {
+    id:3, name:"El Muelle Culichi", emoji:"🦞", score:"8.9", type:"mariscos",
+    lat:21.133222, lng:-86.8657947,
+    sub:"Mariscos · Cancún · Tu video aquí",
+    tags:["Mariscos","Ceviche","Culiacán","Rodrigo recomienda"],
+    tiktok:"https://www.tiktok.com/@rodrigobuenamadera/video/7609097796938894612",
+    promos:[{title:"Tostada de marlín GRATIS",desc:"Con cualquier orden de $200 MXN o más, presentando Canyum",type:"gratis"}],
+    reviews:[{u:"Sofía L.",s:"9.0",t:"El ceviche de camarón es de otro nivel, fresquísimo."},{u:"David K.",s:"8.8",t:"Amazing seafood, very fresh. The shrimp ceviche is incredible."}],
+    creator:true, hours:"Lun-Dom 10am-9pm", phone:"+52 998 000 0003"
+  },
+  {
+    id:4, name:"Café con Gracia", emoji:"☕", score:"8.7", type:"cafe",
+    lat:21.1575944, lng:-86.8333261,
+    sub:"Café · Cancún · Tu video aquí",
+    tags:["Café","Cold brew","Brunch","Rodrigo recomienda"],
+    tiktok:"https://www.tiktok.com/@rodrigobuenamadera/video/7621988418901298439",
+    promos:[{title:"2do café al 50%",desc:"Válido de 2pm-5pm de lunes a viernes con Canyum",type:"descuento"},{title:"Doble Canyum Coins",desc:"Esta semana gana el doble de Coins en cada visita",type:"coins"}],
+    reviews:[{u:"Valeria T.",s:"8.9",t:"El cold brew más rico de Cancún, ambiente increíble para trabajar."},{u:"Emma S.",s:"8.5",t:"Lovely café, great atmosphere and amazing coffee!"}],
+    creator:true, hours:"Lun-Sáb 7am-9pm", phone:"+52 998 000 0004"
+  },
+  {
+    id:5, name:"Takeros CDMX", emoji:"🌮", score:"8.8", type:"taqueria",
+    lat:21.1340944, lng:-86.8332078,
+    sub:"Tacos estilo CDMX · Cancún · Tu video aquí",
+    tags:["Tacos CDMX","Suadero","Canasta","Rodrigo recomienda"],
+    tiktok:"https://www.tiktok.com/@rodrigobuenamadera/video/7610680223226416404",
+    promos:[{title:"Combo 5 tacos + agua",desc:"$85 MXN presentando Canyum en caja",type:"combo"}],
+    reviews:[{u:"Jorge P.",s:"8.9",t:"Los tacos de suadero me transportaron directo a la CDMX."},{u:"María G.",s:"8.7",t:"Auténtico sabor chilango en Cancún, impresionante."}],
+    creator:true, hours:"Lun-Dom 7am-4pm", phone:"+52 998 000 0005"
+  },
+  {
+    id:6, name:"Tako Rock", emoji:"🤘", score:"9.0", type:"taqueria",
+    lat:21.1415569, lng:-86.8726892,
+    sub:"Tacos rockeros · Cancún · Tu video aquí",
+    tags:["Tacos","Rock","Único","Rodrigo recomienda"],
+    tiktok:"https://www.tiktok.com/@rodrigobuenamadera/video/7605662533550083346",
+    promos:[{title:"Taco gratis con Canyum Ride",desc:"Llega en Canyum Ride y tu primer taco va por la casa",type:"gratis"}],
+    reviews:[{u:"Roberto N.",s:"9.1",t:"El ambiente rockero + los tacos = experiencia única en Cancún."},{u:"Jake W.",s:"8.9",t:"Coolest taco spot ever, great vibes and even better tacos!"}],
+    creator:true, hours:"Mar-Dom 6pm-2am", phone:"+52 998 000 0006"
+  },
+];
+
+const DARK_STYLE=[
+  {elementType:"geometry",stylers:[{color:"#0d1b2a"}]},
+  {elementType:"labels.text.fill",stylers:[{color:"#8ec3b9"}]},
+  {elementType:"labels.text.stroke",stylers:[{color:"#0d1b2a"}]},
+  {featureType:"poi",elementType:"geometry",stylers:[{color:"#0f2535"}]},
+  {featureType:"poi.park",elementType:"geometry.fill",stylers:[{color:"#0a2d1f"}]},
+  {featureType:"road",elementType:"geometry",stylers:[{color:"#1a3a52"}]},
+  {featureType:"road.highway",elementType:"geometry",stylers:[{color:"#1e4d6b"}]},
+  {featureType:"road.highway",elementType:"labels.text.fill",stylers:[{color:"#00b4a6"}]},
+  {featureType:"water",elementType:"geometry.fill",stylers:[{color:"#071e2e"}]},
+  {featureType:"water",elementType:"labels.text.fill",stylers:[{color:"#00b4a6"}]},
+  {featureType:"administrative",elementType:"geometry.stroke",stylers:[{color:"#194a6e"}]},
+  {featureType:"transit",elementType:"geometry",stylers:[{color:"#0f2535"}]},
+  {featureType:"poi",stylers:[{visibility:"off"}]},
+  {featureType:"poi.business",stylers:[{visibility:"off"}]},
+  {featureType:"transit",stylers:[{visibility:"off"}]},
+];
+
+let map, markers={}, dragMarker=null, dragMode=false, currentPlace=null, currentOwnerIdx=null;
+let customPlaces=[];
+const allP=()=>[...PLACES,...customPlaces];
+
+function initMap(){
+  map=new google.maps.Map(document.getElementById('map'),{
+    center:{lat:21.1450,lng:-86.8499},
+    zoom:13,
+    disableDefaultUI:true,
+    gestureHandling:'greedy',
+    clickableIcons:false,
+    styles:[
+      {elementType:"geometry",stylers:[{color:"#0d1b2a"}]},
+      {elementType:"labels.text.fill",stylers:[{color:"#8ec3b9"}]},
+      {elementType:"labels.text.stroke",stylers:[{color:"#0d1b2a"}]},
+      {featureType:"poi",stylers:[{visibility:"off"}]},
+      {featureType:"poi.business",stylers:[{visibility:"off"}]},
+      {featureType:"transit",stylers:[{visibility:"off"}]},
+      {featureType:"road",elementType:"geometry",stylers:[{color:"#1a3a52"}]},
+      {featureType:"road.highway",elementType:"geometry",stylers:[{color:"#1e4d6b"}]},
+      {featureType:"road.highway",elementType:"labels.text.fill",stylers:[{color:"#00b4a6"}]},
+      {featureType:"water",elementType:"geometry.fill",stylers:[{color:"#071e2e"}]},
+      {featureType:"water",elementType:"labels.text.fill",stylers:[{color:"#00b4a6"}]},
+      {featureType:"administrative",elementType:"geometry.stroke",stylers:[{color:"#194a6e"}]},
+    ],
+  });
+  allP().forEach((p,i)=>addMarker(p,i));
+  buildCards(allP());
+
+  map.addListener('click',()=>{
+    if(dragMode) return;
+  });
+}
+
+function makeIcon(p){
+  const color = p.featured?'#00B4A6': p.promos&&p.promos.length?'#F5A623':'#ffffff';
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="120" height="36">
+    <rect rx="18" ry="18" width="120" height="36" fill="${color}" filter="drop-shadow(0 3px 6px rgba(0,0,0,0.5))"/>
+    <text x="12" y="23" font-size="16" font-family="Arial">${p.emoji}</text>
+    <text x="34" y="23" font-size="11" font-family="Arial Black" font-weight="900" fill="${color==='#ffffff'?'#0D1B2A':'#0D1B2A'}">${p.name.length>12?p.name.substring(0,11)+'…':p.name}</text>
+    <text x="100" y="23" font-size="10" font-family="Arial" font-weight="bold" fill="${color==='#ffffff'?'#00B4A6':'#0D1B2A'}">${p.score}</text>
+    <polygon points="55,36 60,28 65,36" fill="${color}"/>
+  </svg>`;
+  return {
+    url:'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svg),
+    scaledSize:new google.maps.Size(120,44),
+    anchor:new google.maps.Point(60,44),
+  };
+}
+
+function makePinSVG(p, selected=false){
+  const color = p.promos&&p.promos.length ? '#F5A623' : '#00B4A6';
+  const bg = selected ? '#ffffff' : color;
+  const border = selected ? '#00B4A6' : color;
+  const textColor = '#0D1B2A';
+  const name = p.name.length>11 ? p.name.substring(0,10)+'…' : p.name;
+  const w = selected ? 140 : 120;
+  const h = selected ? 42 : 36;
+  const fs = selected ? 13 : 11;
+  const efs = selected ? 16 : 14;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h+10}">
+    <rect rx="18" width="${w}" height="${h}" fill="${bg}" stroke="${border}" stroke-width="${selected?3:2}"/>
+    <text x="12" y="${h*0.65}" font-size="${efs}" font-family="Arial">${p.emoji}</text>
+    <text x="34" y="${h*0.65}" font-size="${fs}" font-family="Arial" font-weight="bold" fill="${textColor}">${name}</text>
+    <text x="${w-18}" y="${h*0.65}" font-size="10" font-family="Arial" font-weight="bold" fill="${p.promos&&p.promos.length?'#0D1B2A':'#00B4A6'}" text-anchor="middle">${p.score}</text>
+    <polygon points="${w/2-6},${h} ${w/2},${h+8} ${w/2+6},${h}" fill="${bg}"/>
+  </svg>`;
+  return {
+    url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
+    scaledSize: new google.maps.Size(w, h+10),
+    anchor: new google.maps.Point(w/2, h+10),
+  };
+}
+
+function addMarker(p,i){
+  const m=new google.maps.Marker({
+    position:{lat:p.lat,lng:p.lng},
+    map,
+    icon:makePinSVG(p,false),
+    draggable:true,
+    title:p.name,
+    optimized:false,
+  });
+  m.addListener('click',()=>openD(i));
+  m.addListener('dragend',(e)=>{
+    p.lat=e.latLng.lat();
+    p.lng=e.latLng.lng();
+    const box=document.getElementById('coordsBox');
+    box.textContent=`📍 ${p.name}: ${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}`;
+    box.classList.add('show');
+    setTimeout(()=>box.classList.remove('show'),4000);
+    st(`📍 Pin de ${p.name} actualizado`);
+    if(currentOwnerIdx!==null && allP()[currentOwnerIdx]===p){
+      document.getElementById('opCoords').textContent=`Lat: ${p.lat.toFixed(6)} | Lng: ${p.lng.toFixed(6)}`;
+    }
+  });
+  markers[i]=m;
+}
+
+function buildCards(list){
+  const cs=document.getElementById('csc'); cs.innerHTML='';
+  list.forEach(p=>{
+    const i=allP().indexOf(p);
+    const d=document.createElement('div'); d.className='card'; d.onclick=()=>openD(i);
+    const hasPromo=p.promos&&p.promos.length>0;
+    d.innerHTML=`<div class="ci">
+      ${p.creator?'<span class="cbg2 bt">🎥 Tu video</span>':''}
+      ${hasPromo&&!p.creator?'<span class="cbg2 bgg">🔥 Promo</span>':''}
+      ${p.emoji}
+    </div>
+    <div class="cbd"><div class="cn">${p.name}</div>
+    <div class="cm"><span class="csc">${p.score}</span><span>${p.hours||'Abierto'}</span></div></div>
+    <div class="ca">
+      <button class="ba br" onclick="event.stopPropagation();st('🚗 Canyum Ride a ${p.name}!')">🚗 Ride</button>
+      <button class="ba bd" onclick="event.stopPropagation();st('📍 ${p.name} guardado!')">♡ Guardar</button>
+    </div>`;
+    cs.appendChild(d);
+  });
+}
+
+function openD(i){
+  const p=allP()[i]; currentPlace=p;
+  document.getElementById('de').textContent=p.emoji;
+  document.getElementById('dscv').textContent=p.score;
+  document.getElementById('dna').textContent=p.name;
+  document.getElementById('dsu').textContent=p.sub;
+  document.getElementById('dtg').innerHTML=p.tags.map(t=>`<span>${t}</span>`).join('');
+  document.getElementById('dac').innerHTML=`
+    <button class="dab dar" onclick="st('🚗 Canyum Ride a ${p.name}!')">🚗 Canyum Ride</button>
+    <button class="dab dad" onclick="window.open('https://wa.me/${(p.phone||'').replace(/\D/g,'')}','_blank')">📱 WhatsApp</button>`;
+
+  // Promos
+  const promoSec=document.getElementById('promoSec');
+  const dpromos=document.getElementById('dpromos');
+  if(p.promos&&p.promos.length){
+    promoSec.style.display='block';
+    dpromos.innerHTML=p.promos.map(pr=>`
+      <div class="promo-card">
+        <div class="promo-badge">${pr.type==='2x1'?'🎁 2x1':pr.type==='descuento'?'💰 Descuento':pr.type==='gratis'?'✨ Gratis':pr.type==='coins'?'🪙 Doble Coins':'🍽️ Combo'}</div>
+        <div class="promo-title">${pr.title}</div>
+        <div class="promo-desc">${pr.desc}</div>
+      </div>`).join('');
+  } else {
+    promoSec.style.display='none';
+    dpromos.innerHTML='';
+  }
+
+  // Video
+  document.getElementById('dvtext').textContent=`@rodrigobuenamadera recomienda ${p.name}`;
+  document.getElementById('dvbox').onclick=()=>window.open(p.tiktok,'_blank');
+
+  // Reviews
+  document.getElementById('drv').innerHTML=(p.reviews||[]).map(r=>`
+    <div class="rv"><div class="rh"><div class="rav">${r.u[0]}</div><span class="rn">${r.u}</span><span class="rs">⭐${r.s}</span></div>
+    <div class="rt">${r.t}</div></div>`).join('');
+
+  // Highlight selected pin, reset others
+  allP().forEach((place,idx)=>{
+    if(markers[idx]) markers[idx].setIcon(makePinSVG(place, place===p));
+  });
+  map.panTo({lat:p.lat,lng:p.lng});
+  map.setZoom(16);
+  document.getElementById('dp').classList.add('open');
+}
+function closeD(){
+  document.getElementById('dp').classList.remove('open');
+  allP().forEach((place,idx)=>{
+    if(markers[idx]) markers[idx].setIcon(makePinSVG(place,false));
+  });
+}
+
+function openOwner(){
+  if(!currentPlace) return;
+  const i=allP().indexOf(currentPlace); currentOwnerIdx=i;
+  const p=currentPlace;
+  document.getElementById('ownerName').textContent=p.name;
+  document.getElementById('opName').value=p.name;
+  document.getElementById('opDesc').value=p.sub;
+  document.getElementById('opHours').value=p.hours||'';
+  document.getElementById('opPhone').value=p.phone||'';
+  document.getElementById('opCoords').textContent=`Lat: ${p.lat.toFixed(6)} | Lng: ${p.lng.toFixed(6)}`;
+  renderOwnerPromos(p);
+  document.getElementById('ownerPanel').classList.add('open');
+  document.getElementById('overlay').classList.add('show');
+}
+function closeOwner(){
+  document.getElementById('ownerPanel').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+function renderOwnerPromos(p){
+  const list=document.getElementById('opPromosList');
+  if(!p.promos||!p.promos.length){ list.innerHTML='<div style="font-size:12px;color:var(--gr);margin-bottom:10px">Sin promociones activas</div>'; return; }
+  list.innerHTML=p.promos.map((pr,i)=>`
+    <div class="promo-card" style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <div class="promo-title">${pr.title}</div>
+        <button onclick="removePromo(${i})" style="background:var(--red);border:none;color:white;border-radius:8px;padding:2px 8px;font-size:10px;cursor:pointer">✕ Eliminar</button>
+      </div>
+      <div class="promo-desc">${pr.desc}</div>
+    </div>`).join('');
+}
+
+function addPromo(){
+  if(!currentPlace) return;
+  const title=document.getElementById('opPromoTitle').value.trim();
+  const desc=document.getElementById('opPromoDesc').value.trim();
+  const type=document.getElementById('opPromoType').value;
+  if(!title){st('⚠️ Escribe el título de la promo');return;}
+  if(!currentPlace.promos) currentPlace.promos=[];
+  currentPlace.promos.push({title,desc,type});
+  document.getElementById('opPromoTitle').value='';
+  document.getElementById('opPromoDesc').value='';
+  renderOwnerPromos(currentPlace);
+  const i=allP().indexOf(currentPlace);
+  if(markers[i]){ if(markers[i].content) markers[i].content=makePinEl(currentPlace); }
+  buildCards(allP());
+  st('🔥 Promoción publicada!');
+}
+
+function removePromo(idx){
+  if(!currentPlace||!currentPlace.promos) return;
+  currentPlace.promos.splice(idx,1);
+  renderOwnerPromos(currentPlace);
+  const i=allP().indexOf(currentPlace);
+  if(markers[i]) if(markers[i].content) markers[i].content=makePinEl(currentPlace);
+  buildCards(allP());
+  st('Promoción eliminada');
+}
+
+function saveOwner(){
+  if(!currentPlace) return;
+  currentPlace.name=document.getElementById('opName').value||currentPlace.name;
+  currentPlace.sub=document.getElementById('opDesc').value||currentPlace.sub;
+  currentPlace.hours=document.getElementById('opHours').value||currentPlace.hours;
+  currentPlace.phone=document.getElementById('opPhone').value||currentPlace.phone;
+  currentPlace.type=document.getElementById('opCat').value;
+  const i=allP().indexOf(currentPlace);
+  if(markers[i]){ if(markers[i].content) markers[i].content=makePinEl(currentPlace); }
+  buildCards(allP());
+  closeOwner();
+  st('✅ Cambios guardados correctamente!');
+}
+
+function startDragFromOwner(){
+  closeOwner();
+  closeD();
+  st('📍 Arrastra el pin del negocio a la ubicación exacta');
+  if(currentPlace){
+    const i=allP().indexOf(currentPlace);
+    if(markers[i]){
+      map.panTo({lat:currentPlace.lat,lng:currentPlace.lng});
+      map.setZoom(17);
+    }
+  }
+}
+
+function toggleDrag(){
+  dragMode=!dragMode;
+  const btn=document.getElementById('apb');
+  const banner=document.getElementById('dragBanner');
+  if(dragMode){
+    btn.textContent='✕ Cancelar';
+    btn.classList.add('on');
+    banner.classList.add('show');
+    setTimeout(()=>banner.classList.remove('show'),3000);
+
+    // Add new draggable pin
+    const center=map.getCenter();
+    if(dragMarker) dragMarker.setMap(null);
+    dragMarker=new google.maps.Marker({
+      position:center,
+      map,
+      draggable:true,
+      title:'Nuevo lugar',
+      icon:{
+        url:'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="44" height="54"><circle cx="22" cy="22" r="20" fill="#FF5A5F" stroke="white" stroke-width="3"/><text x="22" y="29" text-anchor="middle" font-size="20" font-family="Arial">📍</text><polygon points="16,40 22,54 28,40" fill="#FF5A5F"/></svg>'),
+        scaledSize:new google.maps.Size(44,54),
+        anchor:new google.maps.Point(22,54),
+      },
+      optimized:false,
+    });
+    dragMarker.addListener('dragend',(e)=>{
+      const lat=e.latLng.lat(), lng=e.latLng.lng();
+      document.getElementById('coordsBox').textContent=`📍 Nuevo pin: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+      document.getElementById('coordsBox').classList.add('show');
+      openNewPinForm(lat,lng);
+    });
+  } else {
+    btn.textContent='📍 Agregar lugar';
+    btn.classList.remove('on');
+    banner.classList.remove('show');
+    if(dragMarker){ dragMarker.setMap(null); dragMarker=null; }
+    document.getElementById('coordsBox').classList.remove('show');
+  }
+}
+
+function openNewPinForm(lat,lng){
+  const name=prompt('Nombre del nuevo lugar:');
+  if(!name) return;
+  const type=prompt('Tipo (taqueria/mariscos/cafe/otro):','taqueria')||'taqueria';
+  const emojis={taqueria:'🌮',mariscos:'🦞',cafe:'☕',otro:'🍽️'};
+  const newP={
+    id:Date.now(), name, emoji:emojis[type]||'🍽️', score:'⭐', type,
+    lat, lng, sub:`${name} · Recién agregado`,
+    tags:['Nuevo','Por verificar'],
+    tiktok:'https://www.tiktok.com/@rodrigobuenamadera',
+    promos:[], reviews:[], creator:false,
+    hours:'Horario por confirmar', phone:''
+  };
+  customPlaces.push(newP);
+  const i=allP().indexOf(newP);
+  addMarker(newP,i);
+  buildCards(allP());
+  document.getElementById('bst').textContent=`${allP().length} lugares en Canyum`;
+  if(dragMarker){ dragMarker.setMap(null); dragMarker=null; }
+  dragMode=false;
+  document.getElementById('apb').textContent='📍 Agregar lugar';
+  document.getElementById('apb').classList.remove('on');
+  st(`✅ ${name} agregado al mapa!`);
+  map.panTo({lat,lng});
+}
+
+function fp(type,el){
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  const a=allP();
+  const f=type==='all'?a:
+    type==='promo'?a.filter(p=>p.promos&&p.promos.length):
+    type==='creator'?a.filter(p=>p.creator):
+    a.filter(p=>p.type===type);
+  document.getElementById('bst').textContent=`${f.length} lugar${f.length!==1?'es':''} encontrado${f.length!==1?'s':''}`;
+  Object.values(markers).forEach(m=>m.setVisible(false));
+  f.forEach(p=>{ const i=allP().indexOf(p); if(markers[i]) markers[i].setVisible(true); });
+  buildCards(f);
+}
+
+let expanded=false;
+function toggleSheet(){expanded=!expanded;document.getElementById('bs').classList.toggle('ex',expanded);}
+
+let tt;
+function st(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),3000);}
+
+function openVideo(){if(currentPlace)window.open(currentPlace.tiktok,'_blank');}
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCIGVhSiDUD2APdNVVTYZuQ9bUNBk9e2e8&callback=initMap&language=es&region=MX&loading=async" async defer></script>
+</body>
+</html>
