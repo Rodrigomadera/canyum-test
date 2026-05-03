@@ -995,40 +995,41 @@ function st(msg){const t=document.getElementById('toast');t.textContent=msg;t.cl
 
 
 </script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCIGVhSiDUD2APdNVVTYZuQ9bUNBk9e2e8&callback=initMap&language=es&region=MX&loading=async" async defer></script>
+<!-- Google Maps loads on enter -->
 
 </div>
 
 <script>
+let mapsLoaded = false;
 function enterMap(){
-  const landing=document.getElementById('landing');
-  const app=document.getElementById('mapApp');
-  landing.classList.add('exit');
+  if(mapsLoaded) return;
+  mapsLoaded = true;
+  
+  const landing = document.getElementById('landing');
+  const app = document.getElementById('mapApp');
+  
+  // Show map container first
   app.classList.add('visible');
+  landing.classList.add('exit');
+  
+  // Force map div height immediately
+  const mapDiv = document.getElementById('map');
+  if(mapDiv){
+    mapDiv.style.height = (window.innerHeight - 102) + 'px';
+    mapDiv.style.width = '100%';
+    mapDiv.style.display = 'block';
+  }
+  
+  // Load Google Maps script NOW (div is visible and has size)
   setTimeout(()=>{
-    landing.style.display='none';
-    // Force map div to have explicit height and trigger resize
-    const mapDiv=document.getElementById('map');
-    if(mapDiv){
-      mapDiv.style.height='calc(100vh - 102px)';
-      mapDiv.style.minHeight='400px';
-    }
-    if(typeof map!=='undefined'&&map){
-      google.maps.event.trigger(map,'resize');
-      map.setCenter({lat:21.1450,lng:-86.8499});
-      map.setZoom(13);
-    }
-    // Double trigger after short delay
-    setTimeout(()=>{
-      if(typeof map!=='undefined'&&map){
-        google.maps.event.trigger(map,'resize');
-        map.setCenter({lat:21.1450,lng:-86.8499});
-      }
-    },300);
-  },800);
+    landing.style.display = 'none';
+    const script = document.createElement('script');
+    script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyCIGVhSiDUD2APdNVVTYZuQ9bUNBk9e2e8&callback=initMap&language=es&region=MX';
+    document.head.appendChild(script);
+  }, 600);
 }
 document.addEventListener('keydown',e=>{if(e.key==='Enter')enterMap();});
 </script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCIGVhSiDUD2APdNVVTYZuQ9bUNBk9e2e8&callback=initMap&language=es&region=MX&loading=async" async defer></script>
+<!-- Google Maps loads on enter -->
 </body>
 </html>
