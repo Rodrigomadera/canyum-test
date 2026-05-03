@@ -49,8 +49,8 @@ html,body{height:100%;overflow:hidden;background:#0D1B2A;font-family:'DM Sans',s
 .city-label{position:fixed;bottom:24px;left:24px;font-size:11px;color:rgba(255,255,255,.2);letter-spacing:3px;text-transform:uppercase;opacity:0;animation:fadeUp 1s ease 1.4s forwards;}
 
 /* ── MAP APP STYLES ── */
-#mapApp{position:fixed;top:0;left:0;right:0;bottom:0;opacity:0;pointer-events:none;transition:opacity .8s ease .2s;display:none;}
-#mapApp.visible{opacity:1;pointer-events:all;display:block;}
+#mapApp{position:fixed;top:0;left:0;right:0;bottom:0;opacity:0;pointer-events:none;transition:opacity .8s ease .2s;display:block;}
+#mapApp.visible{opacity:1;pointer-events:all;}
 
 :root{--t:#00B4A6;--g:#F5A623;--n:#0D1B2A;--n2:#132333;--gr:#64748B;--w:#fff;--red:#FF5A5F;}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -1007,11 +1007,24 @@ function enterMap(){
   app.classList.add('visible');
   setTimeout(()=>{
     landing.style.display='none';
-    // Trigger map resize after reveal
+    // Force map div to have explicit height and trigger resize
+    const mapDiv=document.getElementById('map');
+    if(mapDiv){
+      mapDiv.style.height='calc(100vh - 102px)';
+      mapDiv.style.minHeight='400px';
+    }
     if(typeof map!=='undefined'&&map){
       google.maps.event.trigger(map,'resize');
       map.setCenter({lat:21.1450,lng:-86.8499});
+      map.setZoom(13);
     }
+    // Double trigger after short delay
+    setTimeout(()=>{
+      if(typeof map!=='undefined'&&map){
+        google.maps.event.trigger(map,'resize');
+        map.setCenter({lat:21.1450,lng:-86.8499});
+      }
+    },300);
   },800);
 }
 document.addEventListener('keydown',e=>{if(e.key==='Enter')enterMap();});
