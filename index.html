@@ -304,6 +304,16 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 .login-link{text-align:center;font-size:12px;color:#64748B;margin-top:12px;cursor:pointer;}
 .login-link span{color:#FF5722;font-weight:600;}
 
+
+/* Business logo upload */
+.biz-logo-area{position:relative;width:100%;height:160px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--n);border-radius:0;}
+.biz-logo-img{width:100%;height:100%;object-fit:cover;display:none;}
+.biz-logo-emoji{font-size:64px;transition:all .3s;}
+.biz-logo-overlay{position:absolute;inset:0;background:rgba(0,0,0,0);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;}
+.biz-logo-overlay:hover{background:rgba(0,0,0,0.5);}
+.biz-logo-overlay:hover .biz-logo-upload-hint{opacity:1;}
+.biz-logo-upload-hint{opacity:0;background:#FF5722;color:white;font-family:'Syne',sans-serif;font-weight:700;font-size:11px;padding:8px 16px;border-radius:20px;transition:all .2s;}
+
 /* TOAST */
 .toast{position:fixed;top:108px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--t);color:var(--n);font-family:'Syne',sans-serif;font-weight:700;font-size:13px;padding:9px 20px;border-radius:20px;box-shadow:0 6px 24px rgba(255,87,34,0.4);transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:5000;white-space:nowrap;pointer-events:none;}
 .toast.show{transform:translateX(-50%) translateY(0);}
@@ -482,9 +492,17 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 
 <!-- DETAIL PANEL -->
 <div class="dp" id="dp">
-  <div class="dh" id="dh">
+  <div class="dh" id="dh" style="position:relative;overflow:hidden">
     <button class="dclose" onclick="closeD()">✕</button>
-    <span id="de"></span>
+    <!-- Business logo or emoji -->
+    <div class="biz-logo-area" id="bizLogoArea">
+      <img id="bizLogoImg" class="biz-logo-img" alt="Logo">
+      <span id="de" class="biz-logo-emoji"></span>
+      <div class="biz-logo-overlay" onclick="triggerLogoUpload()" title="Subir logo">
+        <span class="biz-logo-upload-hint">📷 Subir logo</span>
+      </div>
+      <input type="file" id="bizLogoFile" accept="image/*" style="display:none" onchange="handleLogoUpload(this)">
+    </div>
     <button class="downer" onclick="openOwner()">🏪 Propietario</button>
     <div class="dscore" id="dscv"></div>
   </div>
@@ -499,7 +517,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <div class="vbox" id="dvbox" onclick="openVideo()">
       <div style="font-size:28px;margin-bottom:6px">▶️</div>
       <div style="font-size:12px;color:var(--gr)" id="dvtext"></div>
-      <div style="font-size:11px;color:var(--t);margin-top:4px">+50 🪙 si vas después de ver</div>
+      <div style="font-size:11px;color:var(--t);margin-top:4px">🎬 Ve el video completo para ganar +50 🪙</div>
     </div>
     <div class="sec">💬 RESEÑAS</div>
     <div id="drv"></div>
@@ -920,6 +938,11 @@ function addMarker(p,i){
     optimized:false,
   });
   m.addListener('click',()=>openD(i));
+  m.addListener('mouseover',()=>{ if(markers[i]) markers[i].setIcon(makePinSVG(p,true)); });
+  m.addListener('mouseout',()=>{ 
+    const isSelected = currentPlace===p;
+    if(!isSelected && markers[i]) markers[i].setIcon(makePinSVG(p,false)); 
+  });
   m.addListener('dragend',(e)=>{
     p.lat=e.latLng.lat();
     p.lng=e.latLng.lng();
@@ -958,7 +981,17 @@ function buildCards(list){
 
 function openD(i){
   const p=allP()[i]; currentPlace=p;
-  document.getElementById('de').textContent=p.emoji;
+  const deEl = document.getElementById('de');
+  const bizImg = document.getElementById('bizLogoImg');
+  if(p.logo){
+    bizImg.src = p.logo;
+    bizImg.style.display = 'block';
+    deEl.style.display = 'none';
+  } else {
+    bizImg.style.display = 'none';
+    deEl.style.display = 'block';
+    deEl.textContent = p.emoji;
+  }
   document.getElementById('dscv').textContent=p.score;
   document.getElementById('dna').textContent=p.name;
   document.getElementById('dsu').textContent=p.sub;
@@ -1019,17 +1052,23 @@ function openD(i){
         if(tracked || hasWatched(p.id)) return;
         if(vid.currentTime > lastTime) watchTime += vid.currentTime - lastTime;
         lastTime = vid.currentTime;
-        if(watchTime >= 10){
-          tracked = true;
-          markWatched(p.id);
-          addView(p.id);
-          const counter = document.getElementById('viewCounter');
-          if(counter) counter.textContent = getViews(p.id);
+        // Update progress hint
+        if(vid.duration && vid.duration > 0){
+          const pct = Math.round((watchTime/vid.duration)*100);
           const hint = videoContainer.querySelector('div:last-child');
-          if(hint){ hint.textContent = '✓ Ya contaste como vista'; hint.style.color = 'var(--gr)'; }
-          // Coins animation
-          st('🪙 +50 Coins para @rodrigobuenamadera!');
+          if(hint && pct < 100) hint.textContent = '🎬 Ve el video completo para ganar +50 🪙 (' + pct + '%)';
         }
+      });
+      vid.addEventListener('ended', ()=>{
+        if(tracked || hasWatched(p.id)) return;
+        tracked = true;
+        markWatched(p.id);
+        addView(p.id);
+        const counter = document.getElementById('viewCounter');
+        if(counter) counter.textContent = getViews(p.id);
+        const hint = videoContainer.querySelector('div:last-child');
+        if(hint){ hint.textContent = '✓ ¡Ganaste +50 🪙 Coins!'; hint.style.color = '#22C55E'; }
+        st('🪙 +50 Coins para @rodrigobuenamadera!');
       });
     }, 200);
   } else {
@@ -1039,7 +1078,7 @@ function openD(i){
         <div style="font-size:12px;color:var(--gr);margin-bottom:4px">@rodrigobuenamadera recomienda ${p.name}</div>
         <button onclick="window.open('${p.tiktok}','_blank')" style="background:var(--t);border:none;color:var(--n);padding:8px 16px;border-radius:20px;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;cursor:pointer;margin-top:8px">▶ Ver en TikTok</button>
       </div>
-      <div style="font-size:11px;color:var(--t);text-align:center">+50 🪙 si vas después de ver</div>`;
+      <div style="font-size:11px;color:var(--t);text-align:center">🎬 Ve el video completo para ganar +50 🪙</div>`;
   }
   videoContainer.onclick = null;
 
@@ -1499,7 +1538,35 @@ document.addEventListener('click', function(e){
 
 </script>
 <!-- Google Identity Services -->
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://accounts.google.com/gsi/client" async defer>
+// ── BUSINESS LOGO ─────────────────────────────────────────────
+function triggerLogoUpload(){
+  document.getElementById('bizLogoFile').click();
+}
+
+function handleLogoUpload(input){
+  if(!input.files||!input.files[0]) return;
+  const file = input.files[0];
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = document.getElementById('bizLogoImg');
+    const emoji = document.getElementById('de');
+    img.src = e.target.result;
+    img.style.display = 'block';
+    emoji.style.display = 'none';
+    // Save to place
+    if(currentPlace){
+      currentPlace.logo = e.target.result;
+      // Update owner panel if open
+      const ownerLogo = document.getElementById('ownerLogoImg');
+      if(ownerLogo){ ownerLogo.src = e.target.result; ownerLogo.style.display='block'; }
+    }
+    st('✅ Logo del negocio actualizado');
+  };
+  reader.readAsDataURL(file);
+}
+
+</script>
 <!-- Google Maps loads on enter -->
 </body>
 </html>
