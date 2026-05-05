@@ -910,10 +910,10 @@ function makePinSVG(p, selected=false){
   const border = selected ? '#FF5722' : color;
   const textColor = '#0D1B2A';
   const name = p.name.length>11 ? p.name.substring(0,10)+'…' : p.name;
-  const w = selected ? 140 : 120;
-  const h = selected ? 42 : 36;
-  const fs = selected ? 13 : 11;
-  const efs = selected ? 16 : 14;
+  const w = selected ? 120 : 90;
+  const h = selected ? 34 : 26;
+  const fs = selected ? 11 : 9;
+  const efs = selected ? 13 : 11;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h+10}">
     <rect rx="18" width="${w}" height="${h}" fill="${bg}" stroke="${border}" stroke-width="${selected?3:2}"/>
     <text x="12" y="${h*0.65}" font-size="${efs}" font-family="Arial">${p.emoji}</text>
@@ -1037,7 +1037,7 @@ function openD(i){
         </div>
       </div>
       <div style="font-size:11px;color:${watched?'var(--gr)':'var(--t)'}">
-        ${watched ? '✓ Ya contaste como vista' : '+50 🪙 si ves más de 10 segundos'}
+        ${watched ? '✓ Ya contaste como vista' : '🎬 Ve el video completo para ganar +50 🪙'}
       </div>`;
     
     // Setup view tracking
