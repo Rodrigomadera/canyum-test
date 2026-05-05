@@ -267,6 +267,17 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 .plan-name{font-size:11px;color:#64748B;margin-bottom:6px;}
 .plan-feature{font-size:10px;color:#aaa;line-height:1.5;}
 
+
+/* Type cards */
+.type-card{border:1.5px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 8px;cursor:pointer;transition:all .2s;text-align:center;background:rgba(255,255,255,0.03);}
+.type-card.active{border-color:#FF5722;background:rgba(255,87,34,0.1);}
+.type-card:hover{border-color:rgba(255,87,34,0.4);}
+
+/* Social connect buttons */
+.social-connect-btn{width:100%;padding:12px 16px;border-radius:12px;border:1.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:white;font-family:'DM Sans',sans-serif;font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all .2s;}
+.social-connect-btn:hover{border-color:rgba(255,87,34,0.4);background:rgba(255,87,34,0.08);}
+.social-connect-btn.connected{border-color:#22C55E;background:rgba(34,197,94,0.1);color:#22C55E;}
+
 /* Submit btn */
 .rf-btn{width:100%;padding:13px;border-radius:12px;border:none;font-family:'Syne',sans-serif;font-weight:800;font-size:14px;cursor:pointer;transition:all .2s;margin-top:4px;}
 .rf-btn-orange{background:#FF5722;color:white;}
@@ -567,23 +578,11 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     </div>
 
     <!-- Mode: Login / Register -->
-    <div class="reg-modes">
+    <div class="reg-modes" id="regModes">
       <button class="reg-mode active" id="modeLogin" onclick="switchMode('login')">Iniciar sesión</button>
       <button class="reg-mode" id="modeRegister" onclick="switchMode('register')">Crear cuenta</button>
     </div>
-
-    <!-- User type tabs (only on register) -->
-    <div class="user-type-tabs" id="userTypeTabs">
-      <button class="utt active" id="uttUser" onclick="switchUserType('user')">
-        <span class="utt-icon">🍽️</span>Usuario
-      </button>
-      <button class="utt" id="uttCreator" onclick="switchUserType('creator')">
-        <span class="utt-icon">🎥</span>Creador
-      </button>
-      <button class="utt" id="uttBiz" onclick="switchUserType('business')">
-        <span class="utt-icon">🏪</span>Negocio
-      </button>
-    </div>
+    <div class="user-type-tabs" id="userTypeTabs" style="display:none"></div>
 
     <div class="reg-body">
 
@@ -591,7 +590,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       <div class="reg-success" id="regSuccess">
         <div class="success-icon">🎉</div>
         <div class="success-title" id="successTitle">¡Bienvenido a YumMap!</div>
-        <div class="success-sub" id="successSub">Tu cuenta ha sido creada. Ya puedes explorar los mejores lugares de Cancún.</div>
+        <div class="success-sub" id="successSub">Tu cuenta ha sido creada exitosamente.</div>
         <div class="success-coins" id="successCoins">
           <div class="coins-num" id="coinsNum">+100 🪙</div>
           <div class="coins-label">Coins de bienvenida</div>
@@ -599,135 +598,114 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
         <button class="rf-btn rf-btn-orange" onclick="closeReg()">Explorar el mapa</button>
       </div>
 
+      <!-- ── PHONE VERIFY SCREEN ── -->
+      <div class="reg-form" id="formPhone">
+        <div style="text-align:center;padding:8px 0 16px">
+          <div style="font-size:32px;margin-bottom:8px">📱</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:white;margin-bottom:6px">Verificación telefónica</div>
+          <div style="font-size:12px;color:#64748B;line-height:1.6">Los negocios requieren verificación para aparecer en el mapa</div>
+        </div>
+        <div class="rf-label">Número de WhatsApp</div>
+        <input class="rf-input" id="phoneNum" placeholder="+52 998 000 0000">
+        <button class="rf-btn rf-btn-orange" onclick="sendPhoneCode()" style="margin-bottom:8px">Enviar código por WhatsApp</button>
+        <div id="phoneCodeSection" style="display:none">
+          <div class="rf-label">Código de verificación</div>
+          <input class="rf-input" id="phoneCode" placeholder="123456" maxlength="6" style="letter-spacing:8px;font-size:18px;text-align:center">
+          <button class="rf-btn rf-btn-green" onclick="verifyPhone()">Verificar y enviar solicitud</button>
+        </div>
+      </div>
+
+      <!-- ── TIKTOK/SOCIAL CONNECT SCREEN ── -->
+      <div class="reg-form" id="formSocial">
+        <div style="text-align:center;padding:8px 0 12px">
+          <div style="font-size:32px;margin-bottom:8px">🔗</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:white;margin-bottom:6px">Conecta tus redes</div>
+          <div style="font-size:12px;color:#64748B;line-height:1.6">Conecta al menos una red para activar tu perfil de creador</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+          <button class="social-connect-btn" id="btnTikTok" onclick="connectSocial('tiktok')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 0 0-.79-.05A6.34 6.34 0 0 0 3.15 15.2a6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.16 8.16 0 0 0 4.77 1.52V6.74a4.85 4.85 0 0 1-1-.05z"/></svg>
+            Conectar TikTok
+          </button>
+          <button class="social-connect-btn" id="btnInstagram" onclick="connectSocial('instagram')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+            Conectar Instagram
+          </button>
+          <button class="social-connect-btn" id="btnFacebook" onclick="connectSocial('facebook')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            Conectar Facebook
+          </button>
+        </div>
+        <div id="socialConnected" style="display:none;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:10px;padding:10px;margin-bottom:12px;font-size:12px;color:#22C55E;text-align:center"></div>
+        <button class="rf-btn rf-btn-green" id="btnFinishCreator" onclick="finishCreatorReg()" style="display:none">Activar mi perfil de creador</button>
+      </div>
+
       <!-- ── LOGIN FORM ── -->
       <div class="reg-form active" id="formLogin">
         <div style="height:12px"></div>
+        <!-- Google Sign In Button -->
+        <div id="g_id_onload"
+          data-client_id="327357008936-13mhtnfpnp32dhl39137ms8cbd9d3brb.apps.googleusercontent.com"
+          data-callback="handleGoogleSignIn"
+          data-auto_prompt="false">
+        </div>
+        <div class="g_id_signin"
+          data-type="standard"
+          data-size="large"
+          data-theme="outline"
+          data-text="signin_with"
+          data-shape="rectangular"
+          data-logo_alignment="left"
+          data-width="360">
+        </div>
+        <div class="rf-divider" style="margin-top:16px"><div class="rf-divider-line"></div><div class="rf-divider-text">o con email</div><div class="rf-divider-line"></div></div>
         <div class="rf-label">Email</div>
         <input class="rf-input" id="loginEmail" type="email" placeholder="tu@email.com">
         <div class="rf-label">Contraseña</div>
         <input class="rf-input" id="loginPass" type="password" placeholder="••••••••">
         <button class="rf-btn rf-btn-orange" onclick="doLogin()">Entrar a YumMap</button>
-        <div class="rf-divider"><div class="rf-divider-line"></div><div class="rf-divider-text">o continúa con</div><div class="rf-divider-line"></div></div>
-        <button class="rf-btn" style="background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.1);color:white;display:flex;align-items:center;justify-content:center;gap:8px" onclick="st('🔐 Google login próximamente')">
-          <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-          Continuar con Google
-        </button>
         <div class="login-link" onclick="switchMode('register')">¿No tienes cuenta? <span>Regístrate gratis</span></div>
       </div>
 
-      <!-- ── USER FORM ── -->
-      <div class="reg-form" id="formUser">
+      <!-- ── REGISTER FORM (Step 1 - simple) ── -->
+      <div class="reg-form" id="formRegister">
         <div style="height:12px"></div>
-        <div class="benefits-box">
-          <div class="benefit-item"><div class="benefit-dot"></div><div class="benefit-text">Descubre los mejores lugares verificados por creadores</div></div>
-          <div class="benefit-item"><div class="benefit-dot"></div><div class="benefit-text">Gana <b style="color:#22C55E">Coins</b> por cada video que veas +10 segundos</div></div>
-          <div class="benefit-item"><div class="benefit-dot"></div><div class="benefit-text">Canjea Coins por descuentos en restaurantes del mapa</div></div>
+        <!-- Google Sign Up -->
+        <div class="g_id_signin"
+          data-type="standard"
+          data-size="large"
+          data-theme="filled_blue"
+          data-text="signup_with"
+          data-shape="rectangular"
+          data-logo_alignment="left"
+          data-width="360">
         </div>
+        <div class="rf-divider" style="margin-top:16px"><div class="rf-divider-line"></div><div class="rf-divider-text">o con email</div><div class="rf-divider-line"></div></div>
         <div class="rf-label">Nombre</div>
-        <input class="rf-input" id="uName" placeholder="Tu nombre">
+        <input class="rf-input" id="regName" placeholder="Tu nombre completo">
         <div class="rf-label">Email</div>
-        <input class="rf-input" id="uEmail" type="email" placeholder="tu@email.com">
+        <input class="rf-input" id="regEmail" type="email" placeholder="tu@email.com">
         <div class="rf-label">Contraseña</div>
-        <input class="rf-input" id="uPass" type="password" placeholder="Mínimo 8 caracteres">
-        <div class="rf-label">Ciudad</div>
-        <select class="rf-select" id="uCity">
-          <option>Cancún, Q.R.</option>
-          <option>Playa del Carmen, Q.R.</option>
-          <option>Mérida, Yucatán</option>
-          <option>Ciudad de México</option>
-          <option>Otra ciudad</option>
-        </select>
-        <button class="rf-btn rf-btn-orange" onclick="doRegister('user')">Crear cuenta gratis</button>
-        <div class="login-link" onclick="switchMode('login')">¿Ya tienes cuenta? <span>Inicia sesión</span></div>
-      </div>
-
-      <!-- ── CREATOR FORM ── -->
-      <div class="reg-form" id="formCreator">
-        <div style="height:12px"></div>
-        <div class="benefits-box">
-          <div class="benefit-item"><div class="benefit-dot"></div><div class="benefit-text"><b style="color:#22C55E">+50 Coins</b> por cada vista de 10+ segundos en tus videos</div></div>
-          <div class="benefit-item"><div class="benefit-dot"></div><div class="benefit-text">Tu perfil aparece en el mapa junto a los lugares que recomiendas</div></div>
-          <div class="benefit-item"><div class="benefit-dot"></div><div class="benefit-text">Retira tus Coins al 70% de su valor en efectivo</div></div>
-        </div>
-        <div class="rf-label">Nombre completo</div>
-        <input class="rf-input" id="cName" placeholder="Tu nombre">
-        <div class="rf-label">Handle / Usuario</div>
-        <input class="rf-input" id="cHandle" placeholder="@tuusuario">
-        <div class="rf-label">Email</div>
-        <input class="rf-input" id="cEmail" type="email" placeholder="tu@email.com">
-        <div class="rf-label">Contraseña</div>
-        <input class="rf-input" id="cPass" type="password" placeholder="Mínimo 8 caracteres">
-        <div class="rf-label">Plataformas donde publicas</div>
-        <select class="rf-select" id="cPlatform">
-          <option>TikTok</option>
-          <option>TikTok + Instagram</option>
-          <option>Instagram</option>
-          <option>YouTube</option>
-          <option>Todas las anteriores</option>
-        </select>
-        <div class="rf-label">¿Cuántos seguidores tienes actualmente?</div>
-        <select class="rf-select" id="cFollowers">
-          <option>Menos de 1,000</option>
-          <option>1,000 – 10,000</option>
-          <option>10,000 – 50,000</option>
-          <option>50,000 – 100,000</option>
-          <option>Más de 100,000</option>
-        </select>
-        <div class="rf-label">Ciudad donde creas contenido</div>
-        <select class="rf-select" id="cCity">
-          <option>Cancún, Q.R.</option>
-          <option>Playa del Carmen, Q.R.</option>
-          <option>Mérida, Yucatán</option>
-          <option>Ciudad de México</option>
-          <option>Otra ciudad</option>
-        </select>
-        <button class="rf-btn rf-btn-green" onclick="doRegister('creator')">Unirme como Creador</button>
-        <div class="login-link" onclick="switchMode('login')">¿Ya tienes cuenta? <span>Inicia sesión</span></div>
-      </div>
-
-      <!-- ── BUSINESS FORM ── -->
-      <div class="reg-form" id="formBusiness">
-        <div style="height:12px"></div>
-        <div class="benefits-box">
-          <div class="benefit-item"><div class="benefit-dot"></div><div class="benefit-text">Tu negocio aparece en el mapa con pin verificado</div></div>
-          <div class="benefit-item"><div class="benefit-dot"></div><div class="benefit-text">Sube tus propios videos y promociones activas</div></div>
-          <div class="benefit-item"><div class="benefit-dot"></div><div class="benefit-text">Creadores de contenido te recomiendan y llevan clientes</div></div>
-        </div>
-
-        <!-- Plans -->
-        <div class="rf-label">Elige tu plan</div>
-        <div class="plan-grid" id="planGrid">
-          <div class="plan-card selected" onclick="selectPlan(this,'basico')">
-            <div class="plan-price">Gratis</div>
-            <div class="plan-name">Básico</div>
-            <div class="plan-feature">Pin en el mapa<br>1 video<br>Reseñas de usuarios</div>
+        <input class="rf-input" id="regPass" type="password" placeholder="Mínimo 8 caracteres">
+        <div class="rf-label" style="margin-bottom:8px">¿Qué eres en YumMap?</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+          <div class="type-card active" id="tc-user" onclick="selectType('user')">
+            <div style="font-size:24px;margin-bottom:4px">🍽️</div>
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:11px;color:white">Usuario</div>
+            <div style="font-size:9px;color:#64748B;margin-top:2px">Explora y gana Coins</div>
           </div>
-          <div class="plan-card" onclick="selectPlan(this,'pro')">
-            <div class="plan-price">$499<span style="font-size:11px;font-weight:400">/mes</span></div>
-            <div class="plan-name">Pro</div>
-            <div class="plan-feature">Pin destacado<br>Videos ilimitados<br>Panel de métricas<br>Promociones activas</div>
+          <div class="type-card" id="tc-creator" onclick="selectType('creator')">
+            <div style="font-size:24px;margin-bottom:4px">🎥</div>
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:11px;color:white">Creador</div>
+            <div style="font-size:9px;color:#64748B;margin-top:2px">Sube videos y gana</div>
+          </div>
+          <div class="type-card" id="tc-business" onclick="selectType('business')">
+            <div style="font-size:24px;margin-bottom:4px">🏪</div>
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:11px;color:white">Negocio</div>
+            <div style="font-size:9px;color:#64748B;margin-top:2px">Pon tu restaurante</div>
           </div>
         </div>
-
-        <div class="rf-label">Nombre del negocio</div>
-        <input class="rf-input" id="bName" placeholder="Ej: Parrilleros de Freddy">
-        <div class="rf-label">Tipo de negocio</div>
-        <select class="rf-select" id="bType">
-          <option>🌮 Tacos / Mexicana</option>
-          <option>🦞 Mariscos</option>
-          <option>☕ Café / Desayunos</option>
-          <option>🍕 Pizza / Italiana</option>
-          <option>🍣 Sushi / Japonesa</option>
-          <option>🍔 Hamburguesas</option>
-          <option>🍽️ Otro</option>
-        </select>
-        <div class="rf-label">Email de contacto</div>
-        <input class="rf-input" id="bEmail" type="email" placeholder="negocio@email.com">
-        <div class="rf-label">WhatsApp del negocio</div>
-        <input class="rf-input" id="bPhone" placeholder="+52 998 000 0000">
-        <div class="rf-label">Dirección</div>
-        <input class="rf-input" id="bAddress" placeholder="Calle, colonia, Cancún">
-        <button class="rf-btn rf-btn-orange" onclick="doRegister('business')">Registrar mi negocio</button>
+        <button class="rf-btn rf-btn-orange" onclick="doRegisterStep1()">Continuar</button>
         <div class="login-link" onclick="switchMode('login')">¿Ya tienes cuenta? <span>Inicia sesión</span></div>
       </div>
 
@@ -1249,6 +1227,8 @@ function st(msg){const t=document.getElementById('toast');t.textContent=msg;t.cl
 
 
 </script>
+<!-- Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <!-- Google Maps loads on enter -->
 
 </div>
@@ -1283,7 +1263,222 @@ function enterMap(){
   }, 600);
 }
 document.addEventListener('keydown',e=>{if(e.key==='Enter')enterMap();});
+
+
+// ══ REGISTRATION SYSTEM ══════════════════════════════════════
+let currentType = 'user';
+let connectedSocials = [];
+
+function openReg(mode, type){
+  mode = mode || 'register';
+  currentType = type || 'user';
+  document.getElementById('regSuccess').classList.remove('show');
+  document.querySelectorAll('.reg-form').forEach(f=>f.classList.remove('active'));
+  document.getElementById('regModes').style.display = 'flex';
+  switchMode(mode);
+  document.getElementById('regOverlay').classList.add('show');
+  // Initialize Google button
+  if(window.google && google.accounts){
+    google.accounts.id.initialize({
+      client_id: '327357008936-13mhtnfpnp32dhl39137ms8cbd9d3brb.apps.googleusercontent.com',
+      callback: handleGoogleSignIn,
+      auto_select: false,
+    });
+    google.accounts.id.renderButton(
+      document.querySelector('.g_id_signin'),
+      {theme:'filled_blue', size:'large', text: mode==='login'?'signin_with':'signup_with', width: 360}
+    );
+  }
+}
+
+function closeReg(){
+  document.getElementById('regOverlay').classList.remove('show');
+}
+
+function switchMode(mode){
+  document.getElementById('modeLogin').classList.toggle('active', mode==='login');
+  document.getElementById('modeRegister').classList.toggle('active', mode==='register');
+  document.querySelectorAll('.reg-form').forEach(f=>f.classList.remove('active'));
+  if(mode==='login') document.getElementById('formLogin').classList.add('active');
+  else document.getElementById('formRegister').classList.add('active');
+}
+
+function selectType(type){
+  currentType = type;
+  ['user','creator','business'].forEach(t=>{
+    document.getElementById('tc-'+t).classList.toggle('active', t===type);
+  });
+}
+
+function doRegisterStep1(){
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const pass = document.getElementById('regPass').value;
+  if(!name||!email){ st('⚠️ Ingresa tu nombre y email'); return; }
+  if(pass && pass.length < 8){ st('⚠️ La contraseña debe tener al menos 8 caracteres'); return; }
+
+  if(currentType === 'creator'){
+    // Go to social connect step
+    document.querySelectorAll('.reg-form').forEach(f=>f.classList.remove('active'));
+    document.getElementById('formSocial').classList.add('active');
+    document.getElementById('regModes').style.display = 'none';
+  } else if(currentType === 'business'){
+    // Go to phone verify step
+    document.querySelectorAll('.reg-form').forEach(f=>f.classList.remove('active'));
+    document.getElementById('formPhone').classList.add('active');
+    document.getElementById('regModes').style.display = 'none';
+  } else {
+    // User - finish directly
+    showSuccess('user', name);
+  }
+}
+
+// ── GOOGLE SIGN IN ─────────────────────────────────────────────
+function handleGoogleSignIn(response){
+  // Decode JWT token
+  const base64Url = response.credential.split('.')[1];
+  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  const payload = JSON.parse(window.atob(base64));
+  const name = payload.name || payload.email.split('@')[0];
+  const email = payload.email;
+  const picture = payload.picture;
+  showSuccess('google', name, picture);
+}
+
+function doLogin(){
+  const email = document.getElementById('loginEmail').value.trim();
+  if(!email){ st('⚠️ Ingresa tu email'); return; }
+  showSuccess('user', email.split('@')[0]);
+}
+
+// ── PHONE VERIFY ───────────────────────────────────────────────
+function sendPhoneCode(){
+  const phone = document.getElementById('phoneNum').value.trim();
+  if(!phone){ st('⚠️ Ingresa tu número de WhatsApp'); return; }
+  document.getElementById('phoneCodeSection').style.display = 'block';
+  st('📱 Código enviado a ' + phone + ' (demo: usa 123456)');
+}
+
+function verifyPhone(){
+  const code = document.getElementById('phoneCode').value.trim();
+  if(!code){ st('⚠️ Ingresa el código'); return; }
+  if(code !== '123456'){ st('⚠️ Código incorrecto — usa 123456 para el demo'); return; }
+  const name = document.getElementById('regName').value.trim() || 'Negocio';
+  showSuccess('business', name);
+}
+
+// ── SOCIAL CONNECT ─────────────────────────────────────────────
+function connectSocial(platform){
+  const btn = document.getElementById('btn' + platform.charAt(0).toUpperCase() + platform.slice(1));
+  if(!connectedSocials.includes(platform)){
+    connectedSocials.push(platform);
+    btn.classList.add('connected');
+    const icons = {tiktok:'✓ TikTok conectado', instagram:'✓ Instagram conectado', facebook:'✓ Facebook conectado'};
+    btn.innerHTML = '<span style="font-size:16px">✅</span>' + icons[platform];
+    const connectedDiv = document.getElementById('socialConnected');
+    connectedDiv.style.display = 'block';
+    connectedDiv.textContent = '✓ ' + connectedSocials.length + ' red(es) conectada(s) — ' + connectedSocials.join(', ');
+    document.getElementById('btnFinishCreator').style.display = 'block';
+  }
+  st('✅ ' + platform + ' conectado correctamente');
+}
+
+function finishCreatorReg(){
+  if(connectedSocials.length === 0){ st('⚠️ Conecta al menos una red social'); return; }
+  const name = document.getElementById('regName').value.trim() || document.getElementById('cHandle')?.value.trim() || 'Creador';
+  showSuccess('creator', name);
+}
+
+// ── SUCCESS ────────────────────────────────────────────────────
+function showSuccess(type, name, picture){
+  const title = document.getElementById('successTitle');
+  const sub = document.getElementById('successSub');
+  const coinsNum = document.getElementById('coinsNum');
+
+  if(type==='creator'){
+    title.textContent = '¡Bienvenido/a ' + name + '!';
+    sub.textContent = 'Tu perfil de creador está activo. Sube videos de tus lugares favoritos y gana Coins por cada vista.';
+    coinsNum.textContent = '+200 🪙';
+  } else if(type==='business'){
+    title.textContent = '¡Registro enviado!';
+    sub.textContent = name + ' está en proceso de validación. Te contactaremos por WhatsApp en menos de 24 horas para activar tu pin en el mapa.';
+    coinsNum.textContent = '+500 🪙';
+  } else if(type==='google'){
+    title.textContent = '¡Hola ' + name + '!';
+    sub.textContent = 'Sesión iniciada con Google. Ya puedes explorar los mejores lugares de Cancún.';
+    coinsNum.textContent = '+100 🪙';
+  } else {
+    title.textContent = '¡Bienvenido/a ' + name + '!';
+    sub.textContent = 'Tu cuenta está lista. Explora los mejores lugares recomendados por creadores locales.';
+    coinsNum.textContent = '+100 🪙';
+  }
+
+  document.querySelectorAll('.reg-form').forEach(f=>f.classList.remove('active'));
+  document.getElementById('regModes').style.display='none';
+  document.getElementById('regSuccess').classList.add('show');
+  connectedSocials = [];
+
+  setTimeout(()=>{
+    if(type==='creator') st('🎥 ¡Eres creador YumMap! Sube tu primer video');
+    else if(type==='business') st('🏪 ¡Solicitud enviada! Validación en 24hrs');
+    else st('🎉 ¡Bienvenido a YumMap!');
+  }, 400);
+}
+
+document.getElementById('regOverlay') && document.getElementById('regOverlay').addEventListener('click', function(e){
+  if(e.target===this) closeReg();
+});
+
+// ══ SEARCH ════════════════════════════════════════════════════
+function handleSearch(q){
+  const box = document.getElementById('searchResults');
+  if(!box) return;
+  q = (q||'').trim().toLowerCase();
+  if(!q){ box.classList.remove('show'); return; }
+  const results = allP().filter(p =>
+    p.name.toLowerCase().includes(q) ||
+    p.type.toLowerCase().includes(q) ||
+    (p.sub||'').toLowerCase().includes(q) ||
+    (p.tags||[]).some(t=>t.toLowerCase().includes(q)) ||
+    (p.creator_handle||'').toLowerCase().includes(q) ||
+    (['tacos','taco'].some(k=>q.includes(k))&&p.type==='taqueria') ||
+    (['mariscos','ceviche'].some(k=>q.includes(k))&&p.type==='mariscos') ||
+    (['café','cafe','coffee'].some(k=>q.includes(k))&&p.type==='cafe')
+  );
+  if(!results.length){
+    box.innerHTML='<div class="sr-empty">No encontramos "'+q+'" — intenta con otro término</div>';
+    box.classList.add('show'); return;
+  }
+  box.innerHTML = results.map(p=>{
+    const i = allP().indexOf(p);
+    const typeLabel = p.type==='taqueria'?'Tacos':p.type==='mariscos'?'Mariscos':p.type==='cafe'?'Café':'Restaurante';
+    return '<div class="sr-item" onclick="selectSearchResult('+i+')">'+
+      '<div class="sr-emoji">'+p.emoji+'</div>'+
+      '<div class="sr-info"><div class="sr-name">'+p.name+'</div>'+
+      '<div class="sr-meta">'+(p.creator_handle||'')+'</div></div>'+
+      '<div class="sr-tag">'+typeLabel+'</div></div>';
+  }).join('');
+  box.classList.add('show');
+}
+
+function selectSearchResult(i){
+  document.getElementById('searchResults').classList.remove('show');
+  document.getElementById('searchInput').value='';
+  openD(i);
+  if(typeof map!=='undefined') map.setZoom(16);
+}
+
+document.addEventListener('click', function(e){
+  if(!e.target.closest('.sw')&&!e.target.closest('.search-results')){
+    const box=document.getElementById('searchResults');
+    if(box) box.classList.remove('show');
+  }
+});
+
+
 </script>
+<!-- Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <!-- Google Maps loads on enter -->
 </body>
 </html>
