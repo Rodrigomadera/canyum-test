@@ -914,12 +914,13 @@ function makePinSVG(p, selected=false){
   const h = selected ? 34 : 26;
   const fs = selected ? 11 : 9;
   const efs = selected ? 13 : 11;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h+10}">
-    <rect rx="18" width="${w}" height="${h}" fill="${bg}" stroke="${border}" stroke-width="${selected?3:2}"/>
-    <text x="12" y="${h*0.65}" font-size="${efs}" font-family="Arial">${p.emoji}</text>
-    <text x="34" y="${h*0.65}" font-size="${fs}" font-family="Arial" font-weight="bold" fill="${textColor}">${name}</text>
-    <text x="${w-18}" y="${h*0.65}" font-size="10" font-family="Arial" font-weight="bold" fill="${p.promos&&p.promos.length?'#0D1B2A':'#FF5722'}" text-anchor="middle">${p.score}</text>
-    <polygon points="${w/2-6},${h} ${w/2},${h+8} ${w/2+6},${h}" fill="${bg}"/>
+  // Use canvas-free approach: colored dot + name only (no emoji in SVG = no encoding issues)
+  const dotColor = p.type==='taqueria'?'#FF5722':p.type==='mariscos'?'#3B82F6':p.type==='cafe'?'#92400E':'#FF5722';
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h+8}">
+    <rect rx="13" width="${w}" height="${h}" fill="${bg}" stroke="${border}" stroke-width="${selected?2.5:1.5}"/>
+    <circle cx="14" cy="${h/2}" r="${h/2-5}" fill="${selected?border:'white'}" opacity="${selected?0.3:0.25}"/>
+    <text x="26" y="${h*0.67}" font-size="${fs}" font-family="Arial,sans-serif" font-weight="bold" fill="${textColor}">${name}</text>
+    <polygon points="${w/2-5},${h} ${w/2},${h+7} ${w/2+5},${h}" fill="${bg}"/>
   </svg>`;
   return {
     url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
