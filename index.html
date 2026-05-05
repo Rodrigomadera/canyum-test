@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Yummap — El Mapa del Sabor</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&family=Nunito:wght@900&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
 <style>
 /* ── LANDING STYLES ── */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -323,8 +323,29 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
   <div class="bg-circle bg-c3"></div>
   <div class="lcontent">
     <div class="logo-wrap">
-      <div class="logo-text">YumMap</div>
-      <div class="logo-tagline">yummap.food</div>
+      <!-- PIN ICON (mordida) -->
+      <svg width="90" height="105" viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:16px;filter:drop-shadow(0 8px 24px rgba(255,87,34,0.45))">
+        <defs>
+          <linearGradient id="lpinG" x1="60" y1="0" x2="60" y2="140" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#FF7043"/>
+            <stop offset="100%" stop-color="#FF5722"/>
+          </linearGradient>
+          <mask id="lbiteMask">
+            <rect width="120" height="140" fill="white"/>
+            <circle cx="92" cy="20" r="22" fill="black"/>
+          </mask>
+        </defs>
+        <path d="M60 134 C56 124 46 112 36 100 C18 80 6 62 6 44 C6 22 30 4 60 4 C90 4 114 22 114 44 C114 62 102 80 84 100 C74 112 64 124 60 134 Z"
+          fill="url(#lpinG)" mask="url(#lbiteMask)"/>
+        <circle cx="56" cy="56" r="19" fill="white"/>
+        <circle cx="92" cy="20" r="11" fill="#22C55E"/>
+        <circle cx="92" cy="20" r="5" fill="white" opacity="0.85"/>
+      </svg>
+      <!-- YumMap text in Nunito -->
+      <div style="font-family:'Nunito',sans-serif;font-weight:900;font-size:clamp(52px,10vw,80px);line-height:1;letter-spacing:-2px;margin-bottom:8px">
+        <span style="color:#FF5722">Yum</span><span style="color:#22C55E">Map</span>
+      </div>
+      <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:11px;letter-spacing:4px;text-transform:uppercase;color:rgba(255,255,255,0.35)">yummap.food</div>
     </div>
     <div class="ldivider"></div>
     <div class="ltagline">"Este es el <span>mapa del sabor</span>"</div>
