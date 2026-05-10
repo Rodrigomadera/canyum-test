@@ -613,7 +613,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     
     <!-- CLAIM THIS BUSINESS BANNER -->
     <div id="claimBanner" style="display:none">
-      <div class="claim-this-biz" onclick="event.stopPropagation(); claimThisBusiness();">
+      <div class="claim-this-biz" onclick="claimThisBusiness(); return false;">
         <div class="claim-this-biz-title" style="pointer-events:none">🏪 ¿Este negocio es tuyo?</div>
         <div class="claim-this-biz-text" style="pointer-events:none">Reclámalo para gestionar tu menú, promociones, reseñas y subir tus propios videos.</div>
         <div style="margin-top:10px;pointer-events:none">
@@ -1841,7 +1841,8 @@ document.addEventListener('click', function(e){
 
 </script>
 <!-- Google Identity Services -->
-<script src="https://accounts.google.com/gsi/client" async defer>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
 // ── BUSINESS LOGO ─────────────────────────────────────────────
 function triggerLogoUpload(){
   document.getElementById('bizLogoFile').click();
@@ -2065,6 +2066,7 @@ document.addEventListener('click', function(e){
 
 // ══ CLAIM BUSINESS ═══════════════════════════════════════════
 function claimThisBusiness(){
+  console.log('claimThisBusiness called', window.currentUser);
   // Not logged in
   if(!window.currentUser){
     st('🔐 Crea tu cuenta primero para reclamar negocios');
