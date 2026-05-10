@@ -613,9 +613,12 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     
     <!-- CLAIM THIS BUSINESS BANNER -->
     <div id="claimBanner" style="display:none">
-      <div class="claim-this-biz" onclick="claimThisBusiness()">
-        <div class="claim-this-biz-title">🏪 ¿Este negocio es tuyo?</div>
-        <div class="claim-this-biz-text">Reclámalo para gestionar tu menú, promociones, reseñas y subir tus propios videos.</div>
+      <div class="claim-this-biz" onclick="event.stopPropagation(); claimThisBusiness();">
+        <div class="claim-this-biz-title" style="pointer-events:none">🏪 ¿Este negocio es tuyo?</div>
+        <div class="claim-this-biz-text" style="pointer-events:none">Reclámalo para gestionar tu menú, promociones, reseñas y subir tus propios videos.</div>
+        <div style="margin-top:10px;pointer-events:none">
+          <span style="display:inline-block;background:#FF5722;color:white;font-family:'Syne',sans-serif;font-weight:700;font-size:11px;padding:7px 14px;border-radius:20px;letter-spacing:0.5px">Reclamar este negocio →</span>
+        </div>
       </div>
     </div>
     
@@ -2062,30 +2065,33 @@ document.addEventListener('click', function(e){
 
 // ══ CLAIM BUSINESS ═══════════════════════════════════════════
 function claimThisBusiness(){
+  // Not logged in
   if(!window.currentUser){
-    st('⚠️ Inicia sesión primero para reclamar este negocio');
+    st('🔐 Crea tu cuenta primero para reclamar negocios');
     closeD();
-    setTimeout(()=>openReg('register','user'), 500);
+    setTimeout(()=>openReg('register','user'), 600);
     return;
   }
   
+  // Already verified as owner
   if(window.currentUser.ownerStatus === 'verified'){
-    // Already verified - confirm claim
-    if(confirm('¿Reclamar ' + (currentPlace?.name || 'este negocio') + ' como propietario?')){
-      st('✅ Reclamación enviada — la revisaremos en 24hrs');
+    const bizName = currentPlace ? currentPlace.name : 'este negocio';
+    if(confirm('¿Reclamar ' + bizName + ' como propietario? La solicitud será revisada en 24hrs.')){
+      st('✅ Solicitud de reclamación enviada para ' + bizName);
       closeD();
     }
     return;
   }
   
+  // Verification in progress
   if(window.currentUser.ownerStatus === 'pending'){
-    st('⏳ Tu verificación de propietario está en revisión. Una vez aprobada podrás reclamar negocios.');
+    st('⏳ Tu verificación de propietario está en revisión (24-48hrs)');
     return;
   }
   
   // Not verified yet - start verification flow
-  closeD();
   st('🏪 Primero verifica tu identidad como propietario');
+  closeD();
   setTimeout(()=>openOwnerVerif(), 600);
 }
 
@@ -2112,41 +2118,38 @@ function openMyBusinesses(){
 
 
 // ══ SWIPE TO CLOSE DETAIL PANEL ══════════════════════════════
-(function(){
+function initSwipeClose(){
+  const detailPanel = document.getElementById('dp');
+  if(!detailPanel) return;
+  
   let touchStartX = 0;
   let touchStartY = 0;
   let touchEndX = 0;
   let touchEndY = 0;
-  
-  const detailPanel = document.querySelector('.detail');
-  if(!detailPanel) return;
+  let touchedElement = null;
   
   detailPanel.addEventListener('touchstart', function(e){
     touchStartX = e.changedTouches[0].screenX;
     touchStartY = e.changedTouches[0].screenY;
+    touchedElement = e.target;
   }, {passive: true});
   
   detailPanel.addEventListener('touchend', function(e){
     touchEndX = e.changedTouches[0].screenX;
     touchEndY = e.changedTouches[0].screenY;
-    handleSwipe();
-  }, {passive: true});
-  
-  function handleSwipe(){
     const deltaX = touchEndX - touchStartX;
     const deltaY = Math.abs(touchEndY - touchStartY);
-    // Right swipe with minimum distance and not too vertical
-    if(deltaX > 80 && deltaY < 60){
+    // Only swipe if started near the left edge and was a clear horizontal swipe
+    if(deltaX > 100 && deltaY < 60 && touchStartX < 80){
       closeD();
     }
-  }
-})();
+  }, {passive: true});
+}
 
-// Auto-init when DOM ready
 if(document.readyState === 'loading'){
-  document.addEventListener('DOMContentLoaded', function(){
-    // Re-attach if detail panel exists
-  });
+  document.addEventListener('DOMContentLoaded', initSwipeClose);
+} else {
+  initSwipeClose();
 }
 
 </script>
