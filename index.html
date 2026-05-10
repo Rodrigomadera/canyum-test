@@ -934,7 +934,7 @@ function addMarker(p,i){
     position:{lat:p.lat,lng:p.lng},
     map,
     icon:makePinSVG(p,false),
-    draggable:true,
+    draggable:false,
     title:p.name,
     optimized:false,
   });
@@ -944,18 +944,7 @@ function addMarker(p,i){
     const isSelected = currentPlace===p;
     if(!isSelected && markers[i]) markers[i].setIcon(makePinSVG(p,false)); 
   });
-  m.addListener('dragend',(e)=>{
-    p.lat=e.latLng.lat();
-    p.lng=e.latLng.lng();
-    const box=document.getElementById('coordsBox');
-    box.textContent=`📍 ${p.name}: ${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}`;
-    box.classList.add('show');
-    setTimeout(()=>box.classList.remove('show'),4000);
-    st(`📍 Pin de ${p.name} actualizado`);
-    if(currentOwnerIdx!==null && allP()[currentOwnerIdx]===p){
-      document.getElementById('opCoords').textContent=`Lat: ${p.lat.toFixed(6)} | Lng: ${p.lng.toFixed(6)}`;
-    }
-  });
+  // Pins are fixed - only moveable from owner panel
   markers[i]=m;
 }
 
@@ -1180,13 +1169,27 @@ function saveOwner(){
 function startDragFromOwner(){
   closeOwner();
   closeD();
-  st('📍 Arrastra el pin del negocio a la ubicación exacta');
-  if(currentPlace){
-    const i=allP().indexOf(currentPlace);
-    if(markers[i]){
-      map.panTo({lat:currentPlace.lat,lng:currentPlace.lng});
-      map.setZoom(17);
-    }
+  if(!currentPlace) return;
+  const i = allP().indexOf(currentPlace);
+  if(markers[i]){
+    // Temporarily make this pin draggable for the owner
+    markers[i].setDraggable(true);
+    map.panTo({lat:currentPlace.lat, lng:currentPlace.lng});
+    map.setZoom(17);
+    st('📍 Arrastra el pin a la ubicación exacta — toca el mapa cuando termines');
+    // Listen for dragend on this specific pin
+    const dragListener = markers[i].addListener('dragend', (e) => {
+      currentPlace.lat = e.latLng.lat();
+      currentPlace.lng = e.latLng.lng();
+      const box = document.getElementById('coordsBox');
+      box.textContent = `📍 ${currentPlace.name}: ${currentPlace.lat.toFixed(6)}, ${currentPlace.lng.toFixed(6)}`;
+      box.classList.add('show');
+      setTimeout(()=>box.classList.remove('show'), 4000);
+      // Lock pin again after moving
+      markers[i].setDraggable(false);
+      google.maps.event.removeListener(dragListener);
+      st('✅ Ubicación actualizada — guarda los cambios en el panel');
+    });
   }
 }
 
