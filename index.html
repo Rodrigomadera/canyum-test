@@ -787,8 +787,11 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
         <div style="font-size:11px;color:#64748B;line-height:1.5;margin-bottom:16px;text-align:center">
           🔒 Tus documentos son confidenciales y solo se usan para verificación. Tiempo estimado de revisión: 24-48 hrs.
         </div>
+
+        <div class="rf-label">Tu WhatsApp de contacto</div>
+        <input class="rf-input" id="ownerPhone" type="tel" placeholder="+52 998 000 0000" style="margin-bottom:16px">
         
-        <button class="rf-btn rf-btn-orange" onclick="ownerStep(2)">Comenzar verificación</button>
+        <button class="rf-btn rf-btn-orange" onclick="saveOwnerPhone(); ownerStep(2)">Comenzar verificación</button>
       </div>
 
       <!-- ── STEP 2: ID DOCUMENTS ── -->
@@ -1025,6 +1028,8 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
         <input class="rf-input" id="regName" placeholder="Tu nombre completo">
         <div class="rf-label">Email</div>
         <input class="rf-input" id="regEmail" type="email" placeholder="tu@email.com">
+        <div class="rf-label">WhatsApp / Teléfono</div>
+        <input class="rf-input" id="regPhone" type="tel" placeholder="+52 998 000 0000">
         <div class="rf-label">Contraseña</div>
         <input class="rf-input" id="regPass" type="password" placeholder="Mínimo 8 caracteres">
         
@@ -1675,13 +1680,13 @@ function selectType(type){
 }
 
 function doRegisterStep1(){
-  const name = document.getElementById('regName').value.trim();
+  const name  = document.getElementById('regName').value.trim();
   const email = document.getElementById('regEmail').value.trim();
-  const pass = document.getElementById('regPass').value;
+  const phone = document.getElementById('regPhone')?.value.trim() || '';
+  const pass  = document.getElementById('regPass').value;
   if(!name||!email){ st('⚠️ Ingresa tu nombre y email'); return; }
   if(pass && pass.length < 8){ st('⚠️ La contraseña debe tener al menos 8 caracteres'); return; }
-  // Save user data globally
-  window.currentUser = { name, email, isOwner: false, isCreator: false, businesses: [] };
+  window.currentUser = { name, email, phone, isOwner: false, isCreator: false, businesses: [] };
   showSuccess('user', name);
 }
 
@@ -1882,6 +1887,11 @@ let ownerDocs = {
   'permit': null
 };
 
+function saveOwnerPhone(){
+  const ph = document.getElementById('ownerPhone')?.value.trim();
+  if(ph && window.currentUser) window.currentUser.phone = ph;
+}
+
 function openOwnerVerif(){
   closeReg();
   closeUserMenu && closeUserMenu();
@@ -2001,14 +2011,92 @@ function buildReviewSummary(){
   document.getElementById('reviewSummary').innerHTML = html;
 }
 
-function submitOwnerVerif(){
+// ── CONFIG ──────────────────────────────────────────────────
+const WA_ADMIN = '519983222382'; // WhatsApp YumMap admin
+const IMGBB_KEY = 'a1f5e6e7d8c9b2a3'; // ImgBB free API key (reemplaza con tu key en imgbb.com)
+// ────────────────────────────────────────────────────────────
+
+async function uploadToImgBB(base64data, name){
+  try{
+    // Strip data URL prefix
+    const b64 = base64data.split(',')[1] || base64data;
+    const formData = new FormData();
+    formData.append('key', IMGBB_KEY);
+    formData.append('image', b64);
+    formData.append('name', name);
+    const res = await fetch('https://api.imgbb.com/1/upload', {method:'POST', body:formData});
+    const json = await res.json();
+    if(json.success) return json.data.url;
+    return null;
+  } catch(e){ return null; }
+}
+
+async function submitOwnerVerif(){
+  // Update button to loading state
+  const btn = document.querySelector('#ostep-5 .rf-btn-green');
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ Subiendo documentos...'; }
+
   // Save to user state
   if(window.currentUser){
     window.currentUser.ownerStatus = 'pending';
-    window.currentUser.ownerDocs = ownerDocs;
     window.currentUser.submittedAt = new Date().toISOString();
   }
-  
+
+  // Get user info
+  const userName  = window.currentUser?.name  || '(sin nombre)';
+  const userEmail = window.currentUser?.email || '(sin email)';
+  const userPhone = window.currentUser?.phone || '(sin teléfono)';
+  const now = new Date().toLocaleString('es-MX', {dateStyle:'short', timeStyle:'short'});
+
+  // Upload docs to ImgBB and collect links
+  const uploads = {};
+  const docKeys = [
+    ['id-front',  '🪪 INE Frente'],
+    ['id-back',   '🪪 INE Reverso'],
+    ['selfie',    '🤳 Selfie con ID'],
+    ['address',   '🏠 Comprobante domicilio'],
+    ['rfc',       '📄 RFC'],
+    ['permit',    '📋 Permiso municipal']
+  ];
+
+  for(const [key, label] of docKeys){
+    const doc = ownerDocs[key];
+    if(doc && doc.data){
+      if(btn) btn.textContent = '⏳ Subiendo ' + label + '...';
+      const url = await uploadToImgBB(doc.data, 'yummap_' + key + '_' + Date.now());
+      uploads[key] = { label, url: url || '(error al subir)', uploaded: !!url };
+    } else {
+      uploads[key] = { label, url: null, uploaded: false };
+    }
+  }
+
+  // Build WhatsApp message
+  let msg = '🍊 *NUEVA SOLICITUD DE PROPIETARIO — YumMap*\n';
+  msg += '━━━━━━━━━━━━━━━━━━━━\n';
+  msg += '👤 *Nombre:* ' + userName + '\n';
+  msg += '📧 *Email:* ' + userEmail + '\n';
+  msg += '📱 *Teléfono:* ' + userPhone + '\n';
+  msg += '🕐 *Fecha:* ' + now + '\n';
+  msg += '━━━━━━━━━━━━━━━━━━━━\n';
+  msg += '📎 *DOCUMENTOS:*\n';
+
+  for(const [key, info] of Object.entries(uploads)){
+    if(info.url){
+      msg += info.label + ': ' + info.url + '\n';
+    } else if(ownerDocs[key]){
+      msg += info.label + ': (error al subir)\n';
+    } else {
+      msg += info.label + ': No incluido\n';
+    }
+  }
+
+  msg += '━━━━━━━━━━━━━━━━━━━━\n';
+  msg += '✅ Responde APROBAR o RECHAZAR para notificar al solicitante.';
+
+  // Open WhatsApp
+  const waUrl = 'https://wa.me/' + WA_ADMIN + '?text=' + encodeURIComponent(msg);
+  window.open(waUrl, '_blank');
+
   // Show success step
   document.querySelectorAll('.owner-step').forEach(s=>s.style.display='none');
   document.getElementById('ostep-success').style.display='block';
@@ -2017,7 +2105,7 @@ function submitOwnerVerif(){
     const dot = document.getElementById('sd-' + i);
     if(dot){ dot.classList.remove('active'); dot.classList.add('done'); }
   }
-  st('🎉 ¡Solicitud enviada! Te avisaremos por WhatsApp');
+  st('🎉 ¡Solicitud enviada! Revisamos en 24-48 hrs');
 }
 
 document.getElementById('ownerOverlay') && document.getElementById('ownerOverlay').addEventListener('click', function(e){
@@ -2066,35 +2154,48 @@ document.addEventListener('click', function(e){
 
 // ══ CLAIM BUSINESS ═══════════════════════════════════════════
 function claimThisBusiness(){
-  console.log('claimThisBusiness called', window.currentUser);
-  // Not logged in
   if(!window.currentUser){
     st('🔐 Crea tu cuenta primero para reclamar negocios');
     closeD();
     setTimeout(()=>openReg('register','user'), 600);
     return;
   }
-  
-  // Already verified as owner
-  if(window.currentUser.ownerStatus === 'verified'){
-    const bizName = currentPlace ? currentPlace.name : 'este negocio';
-    if(confirm('¿Reclamar ' + bizName + ' como propietario? La solicitud será revisada en 24hrs.')){
-      st('✅ Solicitud de reclamación enviada para ' + bizName);
-      closeD();
-    }
-    return;
-  }
-  
-  // Verification in progress
   if(window.currentUser.ownerStatus === 'pending'){
     st('⏳ Tu verificación de propietario está en revisión (24-48hrs)');
     return;
   }
-  
-  // Not verified yet - start verification flow
-  st('🏪 Primero verifica tu identidad como propietario');
-  closeD();
-  setTimeout(()=>openOwnerVerif(), 600);
+  if(window.currentUser.ownerStatus !== 'verified'){
+    st('🏪 Primero verifica tu identidad como propietario');
+    closeD();
+    setTimeout(()=>openOwnerVerif(), 600);
+    return;
+  }
+  // ✅ Verified — send claim to WhatsApp
+  const bizName  = currentPlace ? currentPlace.name     : 'Negocio desconocido';
+  const bizEmoji = currentPlace ? currentPlace.emoji    : '🍽️';
+  const bizCat   = currentPlace ? currentPlace.category : '';
+  const userName  = window.currentUser.name  || '(sin nombre)';
+  const userEmail = window.currentUser.email || '(sin email)';
+  const userPhone = window.currentUser.phone || '(sin teléfono)';
+  const now = new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'});
+  let msg = '🏪 *RECLAMACIÓN DE NEGOCIO — YumMap*\n';
+  msg += '━━━━━━━━━━━━━━━━━━━━\n';
+  msg += bizEmoji + ' *Negocio:* ' + bizName + '\n';
+  if(bizCat) msg += '🏷️ *Categoría:* ' + bizCat + '\n';
+  msg += '━━━━━━━━━━━━━━━━━━━━\n';
+  msg += '👤 *Propietario:* ' + userName + '\n';
+  msg += '📧 *Email:* ' + userEmail + '\n';
+  msg += '📱 *Teléfono:* ' + userPhone + '\n';
+  msg += '✅ *Verificación:* PROPIETARIO VERIFICADO\n';
+  msg += '🕐 *Fecha:* ' + now + '\n';
+  msg += '━━━━━━━━━━━━━━━━━━━━\n';
+  msg += 'Responde APROBAR para activar el dashboard de este negocio.';
+  if(confirm('¿Confirmas reclamar "' + bizName + '" como tu negocio?\n\nSe enviará una solicitud de revisión.')){
+    window.currentUser.pendingClaim = bizName;
+    closeD();
+    window.open('https://wa.me/' + WA_ADMIN + '?text=' + encodeURIComponent(msg), '_blank');
+    st('✅ ¡Reclamación enviada! Revisamos en 24 hrs');
+  }
 }
 
 // ══ MY BUSINESSES ════════════════════════════════════════════
