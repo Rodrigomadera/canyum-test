@@ -1692,20 +1692,33 @@ function doRegisterStep1(){
 
 // ── GOOGLE SIGN IN ─────────────────────────────────────────────
 function handleGoogleSignIn(response){
-  // Decode JWT token
   const base64Url = response.credential.split('.')[1];
   const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
   const payload = JSON.parse(window.atob(base64));
-  const name = payload.name || payload.email.split('@')[0];
+  const name  = payload.name || payload.email.split('@')[0];
   const email = payload.email;
-  const picture = payload.picture;
-  showSuccess('google', name, picture);
+  window.currentUser = { name, email, phone:'', isOwner:false, isCreator:false, businesses:[] };
+  closeReg();
+  const avatar = document.getElementById('userAvatar');
+  if(avatar) avatar.textContent = name.charAt(0).toUpperCase();
+  const btnUnete = document.getElementById('btnUnete');
+  if(btnUnete) btnUnete.style.display = 'none';
+  st('🎉 ¡Hola ' + name + '! Sesión iniciada con Google');
+  setTimeout(checkAdminAccess, 100);
 }
 
 function doLogin(){
   const email = document.getElementById('loginEmail').value.trim();
+  const name  = email ? email.split('@')[0] : '';
   if(!email){ st('⚠️ Ingresa tu email'); return; }
-  showSuccess('user', email.split('@')[0]);
+  window.currentUser = { name, email, phone:'', isOwner:false, isCreator:false, businesses:[] };
+  closeReg();
+  const avatar = document.getElementById('userAvatar');
+  if(avatar) avatar.textContent = name.charAt(0).toUpperCase();
+  const btnUnete = document.getElementById('btnUnete');
+  if(btnUnete) btnUnete.style.display = 'none';
+  st('🎉 ¡Bienvenido/a ' + name + '!');
+  setTimeout(checkAdminAccess, 100);
 }
 
 // ── PHONE VERIFY ───────────────────────────────────────────────
