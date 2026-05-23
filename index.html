@@ -2116,14 +2116,9 @@ async function submitOwnerVerif(){
   const waUrl = 'https://wa.me/' + WA_ADMIN + '?text=' + encodeURIComponent(msg);
   window.open(waUrl, '_blank');
 
-  // Show success step
-  document.querySelectorAll('.owner-step').forEach(s=>s.style.display='none');
-  document.getElementById('ostep-success').style.display='block';
-  document.getElementById('ownerStepNum').textContent = '¡COMPLETADO!';
-  for(let i=1; i<=5; i++){
-    const dot = document.getElementById('sd-' + i);
-    if(dot){ dot.classList.remove('active'); dot.classList.add('done'); }
-  }
+  // Close overlay and show toast
+  const ov = document.getElementById('ownerOverlay');
+  if(ov){ ov.classList.remove('show'); ov.style.display='none'; }
   st('🎉 ¡Solicitud enviada! Revisamos en 24-48 hrs');
 }
 
