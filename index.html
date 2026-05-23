@@ -2112,11 +2112,17 @@ async function submitOwnerVerif(){
   msg += '━━━━━━━━━━━━━━━━━━━━\n';
   msg += '✅ Responde APROBAR o RECHAZAR para notificar al solicitante.';
 
-  // Open WhatsApp
+  // Abrir WhatsApp — usamos <a> click para evitar popup blocker en Mac/desktop
   const waUrl = 'https://wa.me/' + WA_ADMIN + '?text=' + encodeURIComponent(msg);
-  window.open(waUrl, '_blank');
+  const a = document.createElement('a');
+  a.href = waUrl;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 
-  // Close overlay and show toast
+  // Cerrar overlay
   const ov = document.getElementById('ownerOverlay');
   if(ov){ ov.classList.remove('show'); ov.style.display='none'; }
   st('🎉 ¡Solicitud enviada! Revisamos en 24-48 hrs');
@@ -2207,7 +2213,10 @@ function claimThisBusiness(){
   if(confirm('¿Confirmas reclamar "' + bizName + '" como tu negocio?\n\nSe enviará una solicitud de revisión.')){
     window.currentUser.pendingClaim = bizName;
     closeD();
-    window.open('https://wa.me/' + WA_ADMIN + '?text=' + encodeURIComponent(msg), '_blank');
+    const aC = document.createElement('a');
+    aC.href = 'https://wa.me/' + WA_ADMIN + '?text=' + encodeURIComponent(msg);
+    aC.target = '_blank'; aC.rel = 'noopener';
+    document.body.appendChild(aC); aC.click(); document.body.removeChild(aC);
     st('✅ ¡Reclamación enviada! Revisamos en 24 hrs');
   }
 }
