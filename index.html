@@ -1698,13 +1698,18 @@ function handleGoogleSignIn(response){
   const name  = payload.name || payload.email.split('@')[0];
   const email = payload.email;
   window.currentUser = { name, email, phone:'', isOwner:false, isCreator:false, businesses:[] };
-  closeReg();
-  const avatar = document.getElementById('userAvatar');
-  if(avatar) avatar.textContent = name.charAt(0).toUpperCase();
-  const btnUnete = document.getElementById('btnUnete');
-  if(btnUnete) btnUnete.style.display = 'none';
-  st('🎉 ¡Hola ' + name + '! Sesión iniciada con Google');
-  setTimeout(checkAdminAccess, 100);
+  // Force close modal — Google iframe fires callback outside normal DOM flow
+  const forceClose = ()=>{
+    const ov = document.getElementById('regOverlay');
+    if(ov){ ov.classList.remove('show'); ov.style.display='none'; }
+    const btnUnete = document.getElementById('btnUnete');
+    if(btnUnete) btnUnete.style.display = 'none';
+    const avatar = document.getElementById('userAvatar');
+    if(avatar) avatar.textContent = name.charAt(0).toUpperCase();
+    st('🎉 ¡Hola ' + name + '! Sesión iniciada');
+    checkAdminAccess();
+  };
+  setTimeout(forceClose, 150);
 }
 
 function doLogin(){
@@ -1712,7 +1717,8 @@ function doLogin(){
   const name  = email ? email.split('@')[0] : '';
   if(!email){ st('⚠️ Ingresa tu email'); return; }
   window.currentUser = { name, email, phone:'', isOwner:false, isCreator:false, businesses:[] };
-  closeReg();
+  const ov = document.getElementById('regOverlay');
+  if(ov){ ov.classList.remove('show'); ov.style.display='none'; }
   const avatar = document.getElementById('userAvatar');
   if(avatar) avatar.textContent = name.charAt(0).toUpperCase();
   const btnUnete = document.getElementById('btnUnete');
