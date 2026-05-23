@@ -2368,9 +2368,9 @@ window.adminSolicitudes = window.adminSolicitudes || [];
 
 function checkAdminAccess(){
   if(window.currentUser && window.currentUser.email === ADMIN_EMAIL){
+    window.currentUser.isAdmin = true;
     const fab = document.getElementById('adminFab');
     if(fab) fab.style.display = 'flex';
-    window.currentUser.isAdmin = true;
   }
 }
 
