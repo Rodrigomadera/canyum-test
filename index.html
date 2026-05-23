@@ -2256,6 +2256,251 @@ if(document.readyState === 'loading'){
 }
 
 </script>
+
+<!-- ══ ADMIN PANEL ══════════════════════════════════════════ -->
+<style>
+.admin-fab{position:fixed;bottom:24px;right:24px;z-index:8000;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#FF5722,#FF7043);border:none;color:white;font-size:20px;cursor:pointer;box-shadow:0 4px 20px rgba(255,87,34,0.5);display:none;align-items:center;justify-content:center;transition:all .2s;}
+.admin-fab:hover{transform:scale(1.1);box-shadow:0 6px 28px rgba(255,87,34,0.6);}
+.admin-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:9000;background:rgba(0,0,0,0.95);display:none;flex-direction:column;}
+.admin-overlay.show{display:flex;}
+.admin-topbar{background:#0D1B2A;border-bottom:2px solid #FF5722;padding:14px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.admin-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:#FF5722;letter-spacing:2px;}
+.admin-badge{background:#FF5722;color:white;font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;letter-spacing:2px;}
+.admin-close-btn{margin-left:auto;background:rgba(255,255,255,0.08);border:none;color:white;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;}
+.admin-body{flex:1;overflow-y:auto;padding:20px;}
+.admin-section{margin-bottom:28px;}
+.admin-sec-title{font-family:'Syne',sans-serif;font-weight:800;font-size:12px;color:#FF5722;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid rgba(255,87,34,0.2);}
+.admin-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
+.admin-stat{background:#132333;border-radius:12px;padding:14px;text-align:center;border:1px solid rgba(255,87,34,0.15);}
+.admin-stat-num{font-family:'Syne',sans-serif;font-weight:800;font-size:24px;color:#FF5722;}
+.admin-stat-label{font-size:10px;color:#64748B;margin-top:3px;text-transform:uppercase;letter-spacing:1px;}
+.admin-item{background:#132333;border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;border:1px solid rgba(255,255,255,0.05);}
+.admin-item-icon{font-size:24px;flex-shrink:0;}
+.admin-item-info{flex:1;min-width:0;}
+.admin-item-name{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.admin-item-meta{font-size:11px;color:#64748B;margin-top:2px;}
+.admin-del{background:rgba(255,90,95,0.15);border:1px solid rgba(255,90,95,0.3);color:#FF5A5F;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;transition:all .2s;flex-shrink:0;}
+.admin-del:hover{background:#FF5A5F;color:white;}
+.admin-approve{background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.3);color:#22C55E;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;transition:all .2s;flex-shrink:0;margin-right:5px;}
+.admin-approve:hover{background:#22C55E;color:#0D1B2A;}
+.admin-empty{text-align:center;color:#64748B;font-size:12px;padding:20px;font-style:italic;}
+.admin-tab-row{display:flex;gap:8px;margin-bottom:16px;}
+.admin-tab{flex:1;padding:8px;border-radius:10px;border:1.5px solid rgba(255,87,34,0.2);background:transparent;color:#64748B;font-family:'Syne',sans-serif;font-weight:700;font-size:11px;cursor:pointer;transition:all .2s;}
+.admin-tab.active{background:#FF5722;border-color:#FF5722;color:white;}
+</style>
+
+<!-- Admin FAB button -->
+<button class="admin-fab" id="adminFab" onclick="openAdmin()" title="Panel Admin">⚡</button>
+
+<!-- Admin Panel -->
+<div class="admin-overlay" id="adminOverlay">
+  <div class="admin-topbar">
+    <div class="admin-logo">YUMMAP</div>
+    <div class="admin-badge">MODO DIOS</div>
+    <button class="admin-close-btn" onclick="closeAdmin()">✕</button>
+  </div>
+  <div class="admin-body">
+
+    <!-- Stats -->
+    <div class="admin-stats">
+      <div class="admin-stat">
+        <div class="admin-stat-num" id="adStatNegocios">0</div>
+        <div class="admin-stat-label">Negocios</div>
+      </div>
+      <div class="admin-stat">
+        <div class="admin-stat-num" id="adStatVideos">0</div>
+        <div class="admin-stat-label">Videos</div>
+      </div>
+      <div class="admin-stat">
+        <div class="admin-stat-num" id="adStatSolicitudes">0</div>
+        <div class="admin-stat-label">Solicitudes</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="admin-tab-row">
+      <button class="admin-tab active" onclick="adminTab('negocios',this)">🏪 Negocios</button>
+      <button class="admin-tab" onclick="adminTab('solicitudes',this)">📋 Solicitudes</button>
+      <button class="admin-tab" onclick="adminTab('videos',this)">🎬 Videos</button>
+    </div>
+
+    <!-- Negocios -->
+    <div id="adTabNegocios" class="admin-section">
+      <div class="admin-sec-title">Negocios en el mapa</div>
+      <div id="adListNegocios"></div>
+    </div>
+
+    <!-- Solicitudes -->
+    <div id="adTabSolicitudes" class="admin-section" style="display:none">
+      <div class="admin-sec-title">Solicitudes de propietarios</div>
+      <div id="adListSolicitudes"></div>
+    </div>
+
+    <!-- Videos -->
+    <div id="adTabVideos" class="admin-section" style="display:none">
+      <div class="admin-sec-title">Videos subidos</div>
+      <div id="adListVideos"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ══ ADMIN ════════════════════════════════════════════════════
+const ADMIN_EMAIL = 'madera.rodrigo@gmail.com';
+
+// Pending owner requests (populated when submitOwnerVerif fires)
+window.adminSolicitudes = window.adminSolicitudes || [];
+
+function checkAdminAccess(){
+  if(window.currentUser && window.currentUser.email === ADMIN_EMAIL){
+    const fab = document.getElementById('adminFab');
+    if(fab) fab.style.display = 'flex';
+    window.currentUser.isAdmin = true;
+  }
+}
+
+function openAdmin(){
+  renderAdminPanel();
+  document.getElementById('adminOverlay').classList.add('show');
+}
+
+function closeAdmin(){
+  document.getElementById('adminOverlay').classList.remove('show');
+}
+
+function adminTab(tab, btn){
+  document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('adTabNegocios').style.display    = tab==='negocios'    ? 'block':'none';
+  document.getElementById('adTabSolicitudes').style.display = tab==='solicitudes' ? 'block':'none';
+  document.getElementById('adTabVideos').style.display      = tab==='videos'      ? 'block':'none';
+}
+
+function renderAdminPanel(){
+  // Stats
+  document.getElementById('adStatNegocios').textContent    = places.length;
+  document.getElementById('adStatVideos').textContent      = places.reduce((a,p)=>(p.videos?a+p.videos.length:a),0);
+  document.getElementById('adStatSolicitudes').textContent = window.adminSolicitudes.length;
+
+  // Negocios list
+  const listN = document.getElementById('adListNegocios');
+  listN.innerHTML = places.map((p,i)=>`
+    <div class="admin-item" id="adNeg-${i}">
+      <div class="admin-item-icon">${p.emoji||'🍽️'}</div>
+      <div class="admin-item-info">
+        <div class="admin-item-name">${p.name}</div>
+        <div class="admin-item-meta">${p.category||''} · Score ${p.score||'—'}</div>
+      </div>
+      <button class="admin-del" onclick="adminDeleteBiz(${i})">🗑️ Borrar</button>
+    </div>`).join('') || '<div class="admin-empty">No hay negocios registrados</div>';
+
+  // Solicitudes list
+  const listS = document.getElementById('adListSolicitudes');
+  listS.innerHTML = window.adminSolicitudes.length ? window.adminSolicitudes.map((s,i)=>`
+    <div class="admin-item" id="adSol-${i}">
+      <div class="admin-item-icon">👤</div>
+      <div class="admin-item-info">
+        <div class="admin-item-name">${s.name}</div>
+        <div class="admin-item-meta">${s.email} · ${s.phone||''} · ${s.date}</div>
+      </div>
+      <button class="admin-approve" onclick="adminApproveSol(${i})">✅</button>
+      <button class="admin-del" onclick="adminRejectSol(${i})">✕</button>
+    </div>`).join('')
+    : '<div class="admin-empty">Sin solicitudes pendientes</div>';
+
+  // Videos list
+  const listV = document.getElementById('adListVideos');
+  const allVideos = [];
+  places.forEach(p=>{ if(p.videos) p.videos.forEach(v=>allVideos.push({...v, bizName:p.name, bizIdx:places.indexOf(p)})); });
+  listV.innerHTML = allVideos.length ? allVideos.map((v,i)=>`
+    <div class="admin-item" id="adVid-${i}">
+      <div class="admin-item-icon">🎬</div>
+      <div class="admin-item-info">
+        <div class="admin-item-name">${v.title||'Video sin título'}</div>
+        <div class="admin-item-meta">${v.bizName} · ${v.creator||'Anónimo'} · ${v.views||0} vistas</div>
+      </div>
+      <button class="admin-del" onclick="adminDeleteVideo(${v.bizIdx},${i})">🗑️ Borrar</button>
+    </div>`).join('')
+    : '<div class="admin-empty">No hay videos</div>';
+}
+
+function adminDeleteBiz(idx){
+  if(!confirm('¿Borrar "' + places[idx].name + '" del mapa? Esta acción no se puede deshacer.')) return;
+  const name = places[idx].name;
+  // Remove marker from map
+  if(markers[idx]){ markers[idx].setMap(null); markers[idx]=null; }
+  places.splice(idx,1);
+  markers.splice(idx,1);
+  st('🗑️ "' + name + '" eliminado del mapa');
+  renderAdminPanel();
+  renderCards();
+}
+
+function adminDeleteVideo(bizIdx, vidIdx){
+  if(!confirm('¿Borrar este video?')) return;
+  if(places[bizIdx] && places[bizIdx].videos){
+    places[bizIdx].videos.splice(vidIdx,1);
+    st('🗑️ Video eliminado');
+    renderAdminPanel();
+  }
+}
+
+function adminApproveSol(idx){
+  const sol = window.adminSolicitudes[idx];
+  window.adminSolicitudes.splice(idx,1);
+  st('✅ ' + sol.name + ' aprobado como propietario');
+  // Notify via WhatsApp
+  const msg = '✅ *YumMap* — Tu solicitud de propietario fue APROBADA. Ya puedes reclamar y gestionar tus negocios. Ingresa a yummap.food';
+  if(sol.phone) window.open('https://wa.me/' + sol.phone.replace(/\D/g,'') + '?text=' + encodeURIComponent(msg), '_blank');
+  renderAdminPanel();
+}
+
+function adminRejectSol(idx){
+  const sol = window.adminSolicitudes[idx];
+  window.adminSolicitudes.splice(idx,1);
+  st('✕ Solicitud de ' + sol.name + ' rechazada');
+  renderAdminPanel();
+}
+
+// Hook into showSuccess to detect admin login
+const _origShowSuccess = showSuccess;
+function showSuccess(type, name, picture){
+  _origShowSuccess(type, name, picture);
+  setTimeout(checkAdminAccess, 100);
+}
+
+// Hook into doLogin to detect admin
+const _origDoLogin = doLogin;
+function doLogin(){
+  _origDoLogin();
+  setTimeout(checkAdminAccess, 100);
+}
+
+// Hook into doRegisterStep1
+const _origDoReg = doRegisterStep1;
+function doRegisterStep1(){
+  _origDoReg();
+  setTimeout(checkAdminAccess, 100);
+}
+
+// Hook submitOwnerVerif to also log solicitud for admin panel
+const _origSubmit = submitOwnerVerif;
+async function submitOwnerVerif(){
+  // Log to admin solicitudes before sending
+  if(window.currentUser){
+    window.adminSolicitudes.push({
+      name:  window.currentUser.name  || '(sin nombre)',
+      email: window.currentUser.email || '(sin email)',
+      phone: window.currentUser.phone || '',
+      date:  new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'}),
+      docs:  ownerDocs
+    });
+  }
+  await _origSubmit();
+}
+</script>
+
 <!-- Google Maps loads on enter -->
 </body>
 </html>
