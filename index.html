@@ -2070,24 +2070,10 @@ function submitOwnerVerif(){
   const now = new Date().toLocaleString('es-MX', {dateStyle:'short', timeStyle:'short'});
 
   // Mensaje base sin fotos — se envía inmediatamente
-  let msg = '🍊 *NUEVA SOLICITUD DE PROPIETARIO — YumMap*\n';
-  msg += '━━━━━━━━━━━━━━━━━━━━\n';
-  msg += '👤 *Nombre:* ' + userName + '\n';
-  msg += '📧 *Email:* ' + userEmail + '\n';
-  msg += '📱 *Teléfono:* ' + userPhone + '\n';
-  msg += '🕐 *Fecha:* ' + now + '\n';
-  msg += '━━━━━━━━━━━━━━━━━━━━\n';
-  msg += '📎 Documentos subidos: ';
-  const docNames = [];
-  if(ownerDocs['id-front']?.data)  docNames.push('INE frente');
-  if(ownerDocs['id-back']?.data)   docNames.push('INE reverso');
-  if(ownerDocs['selfie']?.data)    docNames.push('Selfie');
-  if(ownerDocs['address']?.data)   docNames.push('Comprobante');
-  if(ownerDocs['rfc']?.data)       docNames.push('RFC');
-  if(ownerDocs['permit']?.data)    docNames.push('Permiso');
-  msg += (docNames.length ? docNames.join(', ') : 'ninguno') + '\n';
-  msg += '━━━━━━━━━━━━━━━━━━━━\n';
-  msg += '✅ Responde APROBAR o RECHAZAR.';
+  let msg = 'YumMap - Nueva solicitud propietario\n';
+  msg += 'Nombre: ' + userName + '\n';
+  msg += 'Email: ' + userEmail + '\n';
+  msg += 'Tel: ' + userPhone;
 
   const waUrl = 'https://wa.me/' + WA_ADMIN + '?text=' + encodeURIComponent(msg);
 
