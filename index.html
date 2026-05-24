@@ -2050,46 +2050,26 @@ async function uploadToImgBB(base64data, name){
   } catch(e){ return null; }
 }
 
-async function submitOwnerVerif(){
-  // Update button to loading state
-  const btn = document.querySelector('#ostep-5 .rf-btn-green');
-  if(btn){ btn.disabled = true; btn.textContent = '⏳ Subiendo documentos...'; }
-
-  // Save to user state
+function submitOwnerVerif(){
+  // Log en admin panel
   if(window.currentUser){
     window.currentUser.ownerStatus = 'pending';
     window.currentUser.submittedAt = new Date().toISOString();
+    window.adminSolicitudes = window.adminSolicitudes || [];
+    window.adminSolicitudes.push({
+      name:  window.currentUser.name  || '(sin nombre)',
+      email: window.currentUser.email || '(sin email)',
+      phone: window.currentUser.phone || '',
+      date:  new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'}),
+    });
   }
 
-  // Get user info
   const userName  = window.currentUser?.name  || '(sin nombre)';
   const userEmail = window.currentUser?.email || '(sin email)';
   const userPhone = window.currentUser?.phone || '(sin teléfono)';
   const now = new Date().toLocaleString('es-MX', {dateStyle:'short', timeStyle:'short'});
 
-  // Upload docs to ImgBB and collect links
-  const uploads = {};
-  const docKeys = [
-    ['id-front',  '🪪 INE Frente'],
-    ['id-back',   '🪪 INE Reverso'],
-    ['selfie',    '🤳 Selfie con ID'],
-    ['address',   '🏠 Comprobante domicilio'],
-    ['rfc',       '📄 RFC'],
-    ['permit',    '📋 Permiso municipal']
-  ];
-
-  for(const [key, label] of docKeys){
-    const doc = ownerDocs[key];
-    if(doc && doc.data){
-      if(btn) btn.textContent = '⏳ Subiendo ' + label + '...';
-      const url = await uploadToImgBB(doc.data, 'yummap_' + key + '_' + Date.now());
-      uploads[key] = { label, url: url || '(error al subir)', uploaded: !!url };
-    } else {
-      uploads[key] = { label, url: null, uploaded: false };
-    }
-  }
-
-  // Build WhatsApp message
+  // Mensaje base sin fotos — se envía inmediatamente
   let msg = '🍊 *NUEVA SOLICITUD DE PROPIETARIO — YumMap*\n';
   msg += '━━━━━━━━━━━━━━━━━━━━\n';
   msg += '👤 *Nombre:* ' + userName + '\n';
@@ -2097,31 +2077,59 @@ async function submitOwnerVerif(){
   msg += '📱 *Teléfono:* ' + userPhone + '\n';
   msg += '🕐 *Fecha:* ' + now + '\n';
   msg += '━━━━━━━━━━━━━━━━━━━━\n';
-  msg += '📎 *DOCUMENTOS:*\n';
+  msg += '📎 Documentos subidos: ';
+  const docNames = [];
+  if(ownerDocs['id-front']?.data)  docNames.push('INE frente');
+  if(ownerDocs['id-back']?.data)   docNames.push('INE reverso');
+  if(ownerDocs['selfie']?.data)    docNames.push('Selfie');
+  if(ownerDocs['address']?.data)   docNames.push('Comprobante');
+  if(ownerDocs['rfc']?.data)       docNames.push('RFC');
+  if(ownerDocs['permit']?.data)    docNames.push('Permiso');
+  msg += (docNames.length ? docNames.join(', ') : 'ninguno') + '\n';
+  msg += '━━━━━━━━━━━━━━━━━━━━\n';
+  msg += '✅ Responde APROBAR o RECHAZAR.';
 
-  for(const [key, info] of Object.entries(uploads)){
-    if(info.url){
-      msg += info.label + ': ' + info.url + '\n';
-    } else if(ownerDocs[key]){
-      msg += info.label + ': (error al subir)\n';
-    } else {
-      msg += info.label + ': No incluido\n';
+  const waUrl = 'https://wa.me/' + WA_ADMIN + '?text=' + encodeURIComponent(msg);
+
+  // Cerrar overlay PRIMERO
+  const ov = document.getElementById('ownerOverlay');
+  if(ov){ ov.classList.remove('show'); ov.style.display = 'none'; }
+
+  // Mostrar banner verde
+  showWaBanner(waUrl, '📋 Solicitud lista — toca para enviar por WhatsApp');
+
+  // Subir fotos en background (no bloquea UI)
+  uploadDocsBackground(waUrl);
+}
+
+async function uploadDocsBackground(baseWaUrl){
+  const docKeys = [
+    ['id-front','INE Frente'],['id-back','INE Reverso'],
+    ['selfie','Selfie'],['address','Comprobante'],
+    ['rfc','RFC'],['permit','Permiso']
+  ];
+  const links = [];
+  for(const [key, label] of docKeys){
+    const doc = ownerDocs[key];
+    if(doc?.data){
+      const url = await uploadToImgBB(doc.data, 'yummap_' + key + '_' + Date.now());
+      if(url) links.push(label + ': ' + url);
     }
   }
-
-  msg += '━━━━━━━━━━━━━━━━━━━━\n';
-  msg += '✅ Responde APROBAR o RECHAZAR para notificar al solicitante.';
-
-  // Guardar URL y mostrar botón persistente
-  const waUrl = 'https://wa.me/' + WA_ADMIN + '?text=' + encodeURIComponent(msg);
-  window._pendingWaUrl = waUrl;
-
-  // Cerrar overlay
-  const ov = document.getElementById('ownerOverlay');
-  if(ov){ ov.classList.remove('show'); ov.style.display='none'; }
-
-  // Mostrar banner persistente con botón
-  showWaBanner(waUrl, '📋 Solicitud lista — toca para enviar por WhatsApp');
+  if(links.length){
+    // Actualizar banner con URL que incluye fotos
+    const userName  = window.currentUser?.name  || '';
+    const userEmail = window.currentUser?.email || '';
+    const userPhone = window.currentUser?.phone || '';
+    const now = new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'});
+    let msg2 = '🍊 *SOLICITUD DE PROPIETARIO — YumMap*\n';
+    msg2 += '👤 ' + userName + ' | ' + userEmail + ' | ' + userPhone + '\n';
+    msg2 += '🕐 ' + now + '\n📎 *FOTOS:*\n' + links.join('\n') + '\n✅ APROBAR o RECHAZAR.';
+    const waUrl2 = 'https://wa.me/' + WA_ADMIN + '?text=' + encodeURIComponent(msg2);
+    // Actualizar silenciosamente el banner
+    const banner = document.getElementById('waBanner');
+    if(banner && banner.classList.contains('show')) banner.href = waUrl2;
+  }
 }
 
 document.getElementById('ownerOverlay') && document.getElementById('ownerOverlay').addEventListener('click', function(e){
@@ -2529,21 +2537,7 @@ function doRegisterStep1(){
   setTimeout(checkAdminAccess, 100);
 }
 
-// Hook submitOwnerVerif to also log solicitud for admin panel
-const _origSubmit = submitOwnerVerif;
-async function submitOwnerVerif(){
-  // Log to admin solicitudes before sending
-  if(window.currentUser){
-    window.adminSolicitudes.push({
-      name:  window.currentUser.name  || '(sin nombre)',
-      email: window.currentUser.email || '(sin email)',
-      phone: window.currentUser.phone || '',
-      date:  new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'}),
-      docs:  ownerDocs
-    });
-  }
-  await _origSubmit();
-}
+// Admin solicitud logging integrated into submitOwnerVerif directly
 </script>
 
 <!-- Google Maps loads on enter -->
