@@ -782,6 +782,8 @@ async function fbLogout(){
       </div>
     </div>
     
+    <div class="sec" id="menuSec" style="display:none">🍽️ MENÚ</div>
+    <div id="dmenu"></div>
     <div class="sec" id="promoSec" style="display:none">🔥 PROMOCIONES ACTIVAS</div>
     <div id="dpromos"></div>
     <div class="sec">🎥 VIDEO DEL CREADOR</div>
@@ -944,6 +946,11 @@ async function fbLogout(){
         <div class="dash-field"><label class="dash-label">Horario</label><input class="dash-input" id="dashHours" placeholder="Lun-Dom 9am-10pm"></div>
       </div>
       <div class="dash-field"><label class="dash-label">Dirección</label><input class="dash-input" id="dashAddr" placeholder="Calle, colonia, ciudad"></div>
+      <div class="dash-field">
+        <label class="dash-label">📍 Ubicación en el mapa — arrastra el pin a tu local</label>
+        <div id="dashMap" style="width:100%;height:220px;border-radius:12px;overflow:hidden;background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.1)"></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:6px" id="dashLatLng">Mueve el mapa y arrastra el pin para marcar dónde está tu negocio.</div>
+      </div>
       <button class="dash-btn" onclick="dashSavePerfil()">Guardar perfil</button>
       <div class="dash-saving" id="dashPerfilMsg"></div>
     </div>
@@ -1398,7 +1405,8 @@ const DARK_STYLE=[
 
 let map, markers={}, dragMarker=null, dragMode=false, currentPlace=null, currentOwnerIdx=null;
 let customPlaces=[];
-const allP=()=>[...PLACES,...customPlaces];
+let fbPlaces=[];
+const allP=()=>[...PLACES,...customPlaces,...fbPlaces];
 
 function initMap(){
   map=new google.maps.Map(document.getElementById('map'),{
@@ -1424,6 +1432,7 @@ function initMap(){
   });
   allP().forEach((p,i)=>addMarker(p,i));
   buildCards(allP());
+  loadFirestoreBusinesses();
 
   map.addListener('click',()=>{
     if(dragMode) return;
@@ -1472,6 +1481,7 @@ function locateMe(){
 // ══════════════════════════════════════════════════════════════
 let dashBiz = null;        // datos del negocio en memoria
 let dashBizId = null;      // id del doc (= uid del propietario)
+let dashMap = null, dashMapMarker = null;
 
 function fileToBase64(file){
   return new Promise(function(res,rej){
@@ -1515,11 +1525,104 @@ async function openOwnerDash(){
     }
     renderDash();
     document.getElementById('ownerDashOverlay').classList.add('show');
+    setTimeout(initDashMap, 350);
   }catch(e){ console.error('openOwnerDash', e); st('⚠️ No se pudo cargar el negocio'); }
 }
 
 function closeOwnerDash(){
   document.getElementById('ownerDashOverlay').classList.remove('show');
+}
+
+function initDashMap(){
+  if(typeof google==='undefined' || !google.maps){ return; }
+  const el = document.getElementById('dashMap');
+  if(!el) return;
+  // Centro inicial: ubicación guardada, o centro del mapa principal, o Chetumal
+  const start = (dashBiz && dashBiz.lat && dashBiz.lng)
+    ? {lat:dashBiz.lat, lng:dashBiz.lng}
+    : (map ? {lat:map.getCenter().lat(), lng:map.getCenter().lng()} : {lat:18.5036, lng:-88.3055});
+  if(!dashMap){
+    dashMap = new google.maps.Map(el, {
+      center:start, zoom:16, disableDefaultUI:true, gestureHandling:'greedy', clickableIcons:false,
+      styles:[{elementType:"geometry",stylers:[{color:"#0d1b2a"}]},
+        {elementType:"labels.text.fill",stylers:[{color:"#8ec3b9"}]},
+        {elementType:"labels.text.stroke",stylers:[{color:"#0d1b2a"}]},
+        {featureType:"poi",stylers:[{visibility:"off"}]},
+        {featureType:"road",elementType:"geometry",stylers:[{color:"#1a3a52"}]},
+        {featureType:"water",elementType:"geometry.fill",stylers:[{color:"#071e2e"}]}]
+    });
+    dashMapMarker = new google.maps.Marker({
+      position:start, map:dashMap, draggable:true,
+      icon:{path:google.maps.SymbolPath.CIRCLE, scale:11, fillColor:'#FF5722', fillOpacity:1, strokeColor:'#fff', strokeWeight:3}
+    });
+    dashMapMarker.addListener('dragend', function(){
+      const pos = dashMapMarker.getPosition();
+      dashSetLatLng(pos.lat(), pos.lng());
+    });
+    dashMap.addListener('click', function(e){
+      dashMapMarker.setPosition(e.latLng);
+      dashSetLatLng(e.latLng.lat(), e.latLng.lng());
+    });
+  } else {
+    dashMap.setCenter(start);
+    dashMapMarker.setPosition(start);
+  }
+  google.maps.event.trigger(dashMap, 'resize');
+  dashMap.setCenter(start);
+  if(dashBiz && dashBiz.lat && dashBiz.lng) dashSetLatLng(dashBiz.lat, dashBiz.lng);
+}
+
+function dashSetLatLng(lat, lng){
+  if(dashBiz){ dashBiz.lat = lat; dashBiz.lng = lng; }
+  const el = document.getElementById('dashLatLng');
+  if(el) el.textContent = '📍 Ubicación marcada: ' + lat.toFixed(5) + ', ' + lng.toFixed(5);
+}
+
+// ── Cargar negocios reales (Firestore) y pintarlos en el mapa ──
+async function loadFirestoreBusinesses(){
+  try{
+    const snap = await fbDB.collection('negocios').get();
+    fbPlaces = [];
+    snap.forEach(function(d){
+      const b = d.data();
+      if(!b || !b.lat || !b.lng) return; // sin ubicación = no se pinta
+      fbPlaces.push({
+        id: 'fb_' + d.id,
+        fbId: d.id,
+        name: b.name || 'Negocio',
+        emoji: b.emoji || '🍽️',
+        score: b.score || '—',
+        type: 'negocio',
+        lat: b.lat, lng: b.lng,
+        sub: (b.direccion || 'YumMap') + ' · Negocio verificado',
+        tags: [],
+        logo: b.foto || '',
+        descripcion: b.descripcion || '',
+        promos: (b.promos || []),
+        menu: (b.menu || []),
+        owner_videos: (b.videos || []),
+        reviews: [],
+        hours: b.horario || '',
+        phone: b.telefono || '',
+        claimedBy: b.ownerUid || true,
+        creator: false
+      });
+    });
+    // Re-pintar todo
+    refreshAllMarkers();
+  }catch(e){ console.error('loadFirestoreBusinesses', e); }
+}
+
+// Limpia y vuelve a pintar todos los marcadores y tarjetas
+function refreshAllMarkers(){
+  try{
+    if(typeof markers === 'object'){
+      Object.keys(markers).forEach(function(k){ if(markers[k] && markers[k].setMap) markers[k].setMap(null); });
+    }
+    markers = {};
+    allP().forEach((p,i)=>addMarker(p,i));
+    buildCards(allP());
+  }catch(e){ console.error('refreshAllMarkers', e); }
 }
 
 function dashTab(tab, btn){
@@ -1566,13 +1669,16 @@ async function dashSavePerfil(){
   dashBiz.horario     = document.getElementById('dashHours').value.trim();
   dashBiz.direccion   = document.getElementById('dashAddr').value.trim();
   try{
-    await fbDB.collection('negocios').doc(dashBizId).update({
+    const upd = {
       name:dashBiz.name, descripcion:dashBiz.descripcion, telefono:dashBiz.telefono,
       horario:dashBiz.horario, direccion:dashBiz.direccion,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    };
+    if(dashBiz.lat && dashBiz.lng){ upd.lat = dashBiz.lat; upd.lng = dashBiz.lng; }
+    await fbDB.collection('negocios').doc(dashBizId).update(upd);
     document.getElementById('dashBizName').textContent = dashBiz.name;
     const m=document.getElementById('dashPerfilMsg'); m.textContent='✓ Perfil guardado'; setTimeout(()=>{m.textContent='';},1800);
+    if(typeof loadFirestoreBusinesses==='function') loadFirestoreBusinesses();
   }catch(e){ console.error(e); st('⚠️ No se pudo guardar el perfil'); }
 }
 
@@ -1791,6 +1897,19 @@ function openD(i){
     <button class="dab dad" onclick="window.open('https://wa.me/${(p.phone||'').replace(/\D/g,'')}','_blank')">📱 WhatsApp</button>`;
 
   // Promos
+  // Menú (negocios de propietario)
+  const menuSec=document.getElementById('menuSec');
+  const dmenu=document.getElementById('dmenu');
+  if(p.menu && p.menu.length){
+    menuSec.style.display='block';
+    dmenu.innerHTML=p.menu.map(function(it){
+      const img = it.foto ? ('<img src="'+it.foto+'" style="width:46px;height:46px;border-radius:8px;object-fit:cover;flex-shrink:0">') : '<div style="width:46px;height:46px;border-radius:8px;background:rgba(255,87,34,0.12);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🍽️</div>';
+      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'+img
+        +'<div style="flex:1"><div style="font-weight:700;color:#fff;font-size:13px">'+it.nombre+'</div></div>'
+        +'<div style="color:#22C55E;font-weight:700;font-size:13px">$'+it.precio+'</div></div>';
+    }).join('');
+  } else { menuSec.style.display='none'; dmenu.innerHTML=''; }
+
   const promoSec=document.getElementById('promoSec');
   const dpromos=document.getElementById('dpromos');
   if(p.promos&&p.promos.length){
