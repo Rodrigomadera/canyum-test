@@ -616,6 +616,7 @@ async function fbLogout(){
 <div id="map"></div>
 
 <div class="coins" id="coinsPill" onclick="showMyCoins()">🪙 0</div>
+<button class="locate-fab" id="locateFab" onclick="locateMe()" title="Mi ubicación" aria-label="Mi ubicación">◎</button>
 <button class="apb" id="apb" onclick="toggleDrag()">📍 Agregar lugar</button>
 <div class="drag-banner" id="dragBanner">📍 Arrastra el pin rojo al lugar exacto</div>
 <div class="coords-box" id="coordsBox"></div>
@@ -1296,6 +1297,41 @@ function initMap(){
   });
   // Force map to render correctly
   setTimeout(()=>{ google.maps.event.trigger(map,'resize'); map.setCenter({lat:21.1450,lng:-86.8499}); }, 300);
+}
+
+// ── MI UBICACIÓN ──────────────────────────────────────────────
+let userLocMarker = null, userLocAccuracy = null;
+function locateMe(){
+  if(!map){ st('⚠️ El mapa aún se está cargando'); return; }
+  if(!navigator.geolocation){ st('⚠️ Tu navegador no permite geolocalización'); return; }
+  const btn = document.getElementById('locateFab');
+  if(btn) btn.classList.add('locating');
+  st('📍 Buscando tu ubicación...');
+  navigator.geolocation.getCurrentPosition(function(pos){
+    const ll = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    if(userLocMarker) userLocMarker.setMap(null);
+    if(userLocAccuracy) userLocAccuracy.setMap(null);
+    userLocAccuracy = new google.maps.Circle({
+      map: map, center: ll,
+      radius: Math.min(pos.coords.accuracy || 60, 140),
+      fillColor:'#4285F4', fillOpacity:0.15,
+      strokeColor:'#4285F4', strokeOpacity:0.3, strokeWeight:1
+    });
+    userLocMarker = new google.maps.Marker({
+      position: ll, map: map, zIndex: 9999,
+      icon: { path: google.maps.SymbolPath.CIRCLE, scale: 8,
+              fillColor:'#4285F4', fillOpacity:1, strokeColor:'#ffffff', strokeWeight:3 }
+    });
+    map.panTo(ll);
+    map.setZoom(16);
+    if(btn) btn.classList.remove('locating');
+    st('📍 ¡Aquí estás!');
+  }, function(err){
+    if(btn) btn.classList.remove('locating');
+    if(err && err.code === 1){ st('📍 Activa el permiso de ubicación en tu navegador para usar esta función'); }
+    else if(err && err.code === 3){ st('📍 Se tardó demasiado, intenta de nuevo'); }
+    else { st('📍 No pudimos obtener tu ubicación'); }
+  }, { enableHighAccuracy:true, timeout:10000, maximumAge:0 });
 }
 
 function makeIcon(p){
@@ -2385,7 +2421,12 @@ if(document.readyState === 'loading'){
 
 <!-- ══ ADMIN PANEL ══════════════════════════════════════════ -->
 <style>
-.admin-fab{position:fixed;bottom:24px;right:24px;z-index:8000;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#FF5722,#FF7043);border:none;color:white;font-size:20px;cursor:pointer;box-shadow:0 4px 20px rgba(255,87,34,0.5);display:none;align-items:center;justify-content:center;transition:all .2s;}
+.admin-fab{position:fixed;bottom:84px;right:24px;z-index:8000;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#FF5722,#FF7043);border:none;color:white;font-size:20px;cursor:pointer;box-shadow:0 4px 20px rgba(255,87,34,0.5);display:none;align-items:center;justify-content:center;transition:all .2s;}
+.locate-fab{position:fixed;bottom:24px;right:24px;z-index:7000;width:48px;height:48px;border-radius:50%;background:rgba(13,27,42,0.92);border:1.5px solid rgba(34,197,94,0.55);color:#22C55E;font-size:22px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);transition:all .18s;}
+.locate-fab:hover{transform:scale(1.06);border-color:#22C55E;}
+.locate-fab:active{transform:scale(0.94);}
+.locate-fab.locating{animation:locpulse 1s ease-in-out infinite;}
+@keyframes locpulse{0%,100%{opacity:1;}50%{opacity:0.45;}}
 /* ── WA BANNER ── */
 .wa-banner{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9500;background:#25D366;border-radius:16px;padding:14px 20px;display:none;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,0.4);max-width:90vw;cursor:pointer;text-decoration:none;}
 .wa-banner.show{display:flex;}
