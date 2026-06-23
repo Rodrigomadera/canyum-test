@@ -117,6 +117,8 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 .dacts{display:flex;gap:7px;margin-bottom:14px;}
 .dab{flex:1;padding:11px;border-radius:12px;border:none;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;}
 .dar{background:var(--t);color:var(--n);}.dad{background:var(--g);color:var(--n);}
+.das{background:rgba(255,255,255,0.1);color:#fff;border:1.5px solid rgba(255,255,255,0.18)!important;flex:0 0 auto!important;padding:11px 14px!important;}
+.das:active{transform:scale(0.96);}
 .sec{font-family:'Syne',sans-serif;font-weight:700;font-size:11px;color:var(--gr);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;margin-top:14px;}
 /* PROMOS */
 .promo-card{background:linear-gradient(135deg,rgba(255,87,34,0.15),rgba(34,197,94,0.1));border:1.5px solid rgba(255,87,34,0.3);border-radius:12px;padding:12px;margin-bottom:8px;}
@@ -1433,6 +1435,7 @@ function initMap(){
   allP().forEach((p,i)=>addMarker(p,i));
   buildCards(allP());
   loadFirestoreBusinesses();
+  setTimeout(checkSharedPlace, 600);
 
   map.addListener('click',()=>{
     if(dragMode) return;
@@ -1610,6 +1613,7 @@ async function loadFirestoreBusinesses(){
     });
     // Re-pintar todo
     refreshAllMarkers();
+    if(typeof tryOpenSharedPlace==='function') tryOpenSharedPlace();
   }catch(e){ console.error('loadFirestoreBusinesses', e); }
 }
 
@@ -1623,6 +1627,75 @@ function refreshAllMarkers(){
     allP().forEach((p,i)=>addMarker(p,i));
     buildCards(allP());
   }catch(e){ console.error('refreshAllMarkers', e); }
+}
+
+// ── COMPARTIR LUGAR ──────────────────────────────────────────
+function sharePlace(){
+  const p = currentPlace;
+  if(!p){ st('⚠️ Abre un negocio primero'); return; }
+  const id = p.fbId ? ('fb_'+p.fbId) : (p.id!=null ? String(p.id) : '');
+  const url = 'https://yummap.food/?lugar=' + encodeURIComponent(id);
+  const loc = (p.lat && p.lng) ? ('\n📍 Ubicación: https://maps.google.com/?q=' + p.lat + ',' + p.lng) : '';
+  const titulo = p.name + ' en YumMap';
+  const texto = '🍽️ ' + p.name + ' — descúbrelo en YumMap' + loc + '\n' + url;
+  if(navigator.share){
+    navigator.share({ title: titulo, text: texto, url: url })
+      .then(function(){ st('✓ ¡Gracias por compartir!'); })
+      .catch(function(){ /* usuario canceló */ });
+  } else {
+    // Respaldo: copiar al portapapeles
+    const full = texto;
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(full).then(function(){ st('🔗 Link copiado — pégalo donde quieras'); })
+        .catch(function(){ sharePlaceFallback(full); });
+    } else { sharePlaceFallback(full); }
+  }
+}
+function sharePlaceFallback(text){
+  try{
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    st('🔗 Link copiado — pégalo donde quieras');
+  }catch(e){ st('🔗 Copia este link: ' + text); }
+}
+
+// ── Abrir un lugar por ID (para links compartidos ?lugar=) ──
+function openPlaceById(id){
+  if(!id) return false;
+  const list = allP();
+  let idx = -1;
+  for(let i=0;i<list.length;i++){
+    const p = list[i];
+    const pid = p.fbId ? ('fb_'+p.fbId) : (p.id!=null ? String(p.id) : '');
+    if(pid === id){ idx = i; break; }
+  }
+  if(idx >= 0){
+    if(typeof enterMap==='function'){ try{ enterMap(); }catch(e){} }
+    setTimeout(function(){
+      openD(idx);
+      const pp = list[idx];
+      if(pp && pp.lat && pp.lng && map){ map.panTo({lat:pp.lat, lng:pp.lng}); map.setZoom(16); }
+    }, 400);
+    return true;
+  }
+  return false;
+}
+
+// Revisar el parámetro ?lugar= al cargar (y tras cargar negocios de Firestore)
+function checkSharedPlace(){
+  try{
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('lugar');
+    if(id){ window._pendingSharedPlace = id; tryOpenSharedPlace(); }
+  }catch(e){}
+}
+function tryOpenSharedPlace(){
+  if(window._pendingSharedPlace){
+    const ok = openPlaceById(window._pendingSharedPlace);
+    if(ok) window._pendingSharedPlace = null;
+  }
 }
 
 function dashTab(tab, btn){
@@ -1893,8 +1966,9 @@ function openD(i){
   document.getElementById('dsu').textContent=p.sub;
   document.getElementById('dtg').innerHTML=p.tags.map(t=>`<span>${t}</span>`).join('');
   document.getElementById('dac').innerHTML=`
-    <button class="dab dar" onclick="st('🚗 Yummap Ride a ${p.name}!')">🚗 Yummap Ride</button>
-    <button class="dab dad" onclick="window.open('https://wa.me/${(p.phone||'').replace(/\D/g,'')}','_blank')">📱 WhatsApp</button>`;
+    <button class="dab dar" onclick="st('🚗 Yummap Ride a ${p.name}!')">🚗 Ride</button>
+    <button class="dab dad" onclick="window.open('https://wa.me/${(p.phone||'').replace(/\D/g,'')}','_blank')">📱 WhatsApp</button>
+    <button class="dab das" onclick="sharePlace()" title="Compartir">🔗 Compartir</button>`;
 
   // Promos
   // Menú (negocios de propietario)
