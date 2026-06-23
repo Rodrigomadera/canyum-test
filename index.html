@@ -1441,7 +1441,20 @@ function initMap(){
     if(dragMode) return;
   });
   // Force map to render correctly
-  setTimeout(()=>{ google.maps.event.trigger(map,'resize'); map.setCenter({lat:21.1450,lng:-86.8499}); }, 300);
+  setTimeout(()=>{ google.maps.event.trigger(map,'resize'); map.setCenter(map.getCenter()); }, 300);
+  setTimeout(autoCenterUser, 500);
+}
+
+// Centrar el mapa en la ciudad del usuario al abrir (Cancún de respaldo)
+function autoCenterUser(){
+  try{ if(new URLSearchParams(window.location.search).get('lugar')) return; }catch(e){}
+  if(!navigator.geolocation || !map) return;
+  navigator.geolocation.getCurrentPosition(function(pos){
+    if(!map) return;
+    map.panTo({lat:pos.coords.latitude, lng:pos.coords.longitude});
+    map.setZoom(14);
+  }, function(){ /* negó o falló: se queda en Cancún */ },
+  { enableHighAccuracy:false, timeout:8000, maximumAge:600000 });
 }
 
 // ── MI UBICACIÓN ──────────────────────────────────────────────
@@ -2240,17 +2253,38 @@ function openNewPinForm(lat,lng){
     promos:[], reviews:[], creator:false,
     hours:'Horario por confirmar', phone:''
   };
-  customPlaces.push(newP);
-  const i=allP().indexOf(newP);
-  addMarker(newP,i);
-  buildCards(allP());
-  document.getElementById('bst').textContent=`${allP().length} lugares en Yummap`;
   if(dragMarker){ dragMarker.setMap(null); dragMarker=null; }
   dragMode=false;
   document.getElementById('apb').textContent='📍 Agregar lugar';
   document.getElementById('apb').classList.remove('on');
-  st(`✅ ${name} agregado al mapa!`);
-  map.panTo({lat,lng});
+  // Guardar permanentemente en Firestore
+  saveNewPlaceToFirestore(newP, type);
+}
+
+// Guarda un lugar agregado manualmente en la colección negocios (permanente)
+async function saveNewPlaceToFirestore(newP, type){
+  try{
+    const ref = fbDB.collection('negocios').doc();
+    await ref.set({
+      ownerUid: (fbAuth.currentUser && fbAuth.currentUser.uid) || 'admin',
+      addedByAdmin: true,
+      name: newP.name, emoji: newP.emoji, type: type || 'otro',
+      lat: newP.lat, lng: newP.lng,
+      descripcion: '', telefono: '', horario: newP.hours || '', direccion: '',
+      foto: '', menu: [], promos: [], videos: [],
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    st('✅ ' + newP.name + ' guardado en el mapa');
+    if(typeof loadFirestoreBusinesses==='function') await loadFirestoreBusinesses();
+    map.panTo({lat:newP.lat, lng:newP.lng});
+  }catch(e){
+    console.error('saveNewPlace', e);
+    // Respaldo: al menos mostrarlo en esta sesión
+    customPlaces.push(newP);
+    refreshAllMarkers();
+    st('⚠️ Se agregó solo en esta sesión (revisa conexión)');
+    map.panTo({lat:newP.lat, lng:newP.lng});
+  }
 }
 
 function fp(type,el){
