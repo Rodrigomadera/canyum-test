@@ -420,6 +420,122 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 .overlay.show{display:block;}
 
 </style>
+<!-- ═══ FIREBASE (compat) ═══ -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBRabjrekpkAX_dusWp4n58FTL99N9xQwc",
+  authDomain: "yummap-2277d.firebaseapp.com",
+  projectId: "yummap-2277d",
+  storageBucket: "yummap-2277d.firebasestorage.app",
+  messagingSenderId: "897383700219",
+  appId: "1:897383700219:web:938f78166cbff3abb9025e"
+};
+firebase.initializeApp(firebaseConfig);
+const fbAuth = firebase.auth();
+const fbDB   = firebase.firestore();
+try { fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); } catch(e){}
+
+// Crea/actualiza el perfil del usuario en Firestore
+async function fbSaveUser(extra){
+  try{
+    const u = fbAuth.currentUser;
+    if(!u) return;
+    const ref  = fbDB.collection('usuarios').doc(u.uid);
+    const snap = await ref.get();
+    const base = {
+      uid: u.uid,
+      name: (window.currentUser&&window.currentUser.name) || u.displayName || (u.email?u.email.split('@')[0]:'Usuario'),
+      email: u.email || (window.currentUser&&window.currentUser.email) || '',
+      phone: (window.currentUser&&window.currentUser.phone) || '',
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    if(!snap.exists){
+      base.coins = 100;
+      base.isOwner = false;
+      base.isCreator = false;
+      base.ownerStatus = 'user';
+      base.businesses = [];
+      base.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+    }
+    await ref.set(Object.assign(base, extra||{}), {merge:true});
+  }catch(e){ console.error('fbSaveUser', e); }
+}
+
+// Carga el perfil a window.currentUser y refresca la UI
+async function fbLoadUser(u){
+  try{
+    const ref = fbDB.collection('usuarios').doc(u.uid);
+    let snap = await ref.get();
+    if(!snap.exists){ await fbSaveUser(); snap = await ref.get(); }
+    const d = snap.data() || {};
+    window.currentUser = {
+      uid: u.uid,
+      name: d.name || u.displayName || 'Usuario',
+      email: d.email || u.email || '',
+      phone: d.phone || '',
+      coins: (typeof d.coins==='number') ? d.coins : 100,
+      isOwner: !!d.isOwner,
+      isCreator: !!d.isCreator,
+      ownerStatus: d.ownerStatus || 'user',
+      businesses: d.businesses || []
+    };
+    fbAfterLogin();
+  }catch(e){ console.error('fbLoadUser', e); }
+}
+
+function fbAfterLogin(){
+  const name = (window.currentUser&&window.currentUser.name)||'Usuario';
+  const av = document.getElementById('userAvatar');
+  if(av) av.textContent = name.charAt(0).toUpperCase();
+  const bu = document.getElementById('btnUnete');
+  if(bu) bu.style.display='none';
+  const ov = document.getElementById('regOverlay');
+  if(ov){ ov.classList.remove('show'); ov.style.display='none'; }
+  if(typeof updateCoinsUI==='function') updateCoinsUI();
+  if(typeof checkAdminAccess==='function') checkAdminAccess();
+}
+
+// ── COINS persistentes ──
+function updateCoinsUI(){
+  const c = (window.currentUser&&typeof window.currentUser.coins==='number') ? window.currentUser.coins : 0;
+  const pill = document.getElementById('coinsPill');
+  if(pill) pill.textContent = '🪙 ' + c;
+}
+async function addCoins(n){
+  if(!window.currentUser) return;
+  window.currentUser.coins = (window.currentUser.coins||0) + n;
+  updateCoinsUI();
+  try{
+    if(fbAuth.currentUser){
+      await fbDB.collection('usuarios').doc(fbAuth.currentUser.uid)
+        .update({ coins: firebase.firestore.FieldValue.increment(n) });
+    }
+  }catch(e){ console.error('addCoins', e); }
+}
+function showMyCoins(){
+  const c = (window.currentUser&&typeof window.currentUser.coins==='number') ? window.currentUser.coins : 0;
+  st('🪙 Tienes ' + c + ' Yummap Coins');
+}
+
+// ── Restaurar sesión al recargar ──
+fbAuth.onAuthStateChanged(function(u){ if(u){ fbLoadUser(u); } });
+
+// ── Cerrar sesión ──
+async function fbLogout(){
+  try{ await fbAuth.signOut(); }catch(e){}
+  window.currentUser = null;
+  const bu = document.getElementById('btnUnete'); if(bu) bu.style.display='';
+  const av = document.getElementById('userAvatar'); if(av) av.textContent='R';
+  const fab = document.getElementById('adminFab'); if(fab) fab.style.display='none';
+  const pill = document.getElementById('coinsPill'); if(pill) pill.textContent='🪙 0';
+  if(typeof closeUserMenu==='function') closeUserMenu();
+  st('👋 Sesión cerrada');
+}
+</script>
+
 </head>
 <body>
 
@@ -499,7 +615,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 
 <div id="map"></div>
 
-<div class="coins" onclick="st('🪙 Tienes 340 Yummap Coins — ¡sigue explorando!')">🪙 340</div>
+<div class="coins" id="coinsPill" onclick="showMyCoins()">🪙 0</div>
 <button class="apb" id="apb" onclick="toggleDrag()">📍 Agregar lugar</button>
 <div class="drag-banner" id="dragBanner">📍 Arrastra el pin rojo al lugar exacto</div>
 <div class="coords-box" id="coordsBox"></div>
@@ -738,12 +854,12 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <div class="um-item-icon">📋</div>
     <div>Mis negocios</div>
   </div>
-  <div class="um-item" onclick="st('🪙 Tienes 340 Coins'); closeUserMenu();">
+  <div class="um-item" onclick="showMyCoins(); closeUserMenu();">
     <div class="um-item-icon">🪙</div>
     <div>Mis Coins</div>
   </div>
   <div class="um-divider"></div>
-  <div class="um-item" onclick="closeUserMenu(); st('👋 Hasta luego');">
+  <div class="um-item" onclick="fbLogout();">
     <div class="um-item-icon">🚪</div>
     <div>Cerrar sesión</div>
   </div>
@@ -1363,7 +1479,8 @@ function openD(i){
         if(counter) counter.textContent = getViews(p.id);
         const hint = videoContainer.querySelector('div:last-child');
         if(hint){ hint.textContent = '✓ ¡Ganaste +50 🪙 Coins!'; hint.style.color = '#22C55E'; }
-        st('🪙 +50 Coins para @rodrigobuenamadera!');
+        if(window.currentUser){ addCoins(50); st('🪙 +50 Coins acreditados a tu cuenta!'); }
+        else { st('🪙 Inicia sesión para guardar tus Coins'); }
       });
     }, 200);
   } else {
@@ -1685,46 +1802,45 @@ function doRegisterStep1(){
   const phone = document.getElementById('regPhone')?.value.trim() || '';
   const pass  = document.getElementById('regPass').value;
   if(!name||!email){ st('⚠️ Ingresa tu nombre y email'); return; }
-  if(pass && pass.length < 8){ st('⚠️ La contraseña debe tener al menos 8 caracteres'); return; }
-  window.currentUser = { name, email, phone, isOwner: false, isCreator: false, businesses: [] };
-  showSuccess('user', name);
+  if(!pass || pass.length < 8){ st('⚠️ La contraseña debe tener al menos 8 caracteres'); return; }
+  fbAuth.createUserWithEmailAndPassword(email, pass)
+    .then(function(c){
+      window.currentUser = { name, email, phone, isOwner:false, isCreator:false, businesses:[] };
+      if(c.user && c.user.updateProfile){ c.user.updateProfile({displayName:name}).catch(function(){}); }
+      return fbSaveUser({ name:name, phone:phone });
+    })
+    .then(function(){ showSuccess('user', name); })
+    .catch(function(e){
+      console.error('register', e);
+      if(e && e.code==='auth/email-already-in-use'){ st('⚠️ Ese correo ya está registrado. Inicia sesión.'); }
+      else if(e && e.code==='auth/invalid-email'){ st('⚠️ Correo inválido'); }
+      else { st('⚠️ No se pudo crear la cuenta'); }
+    });
 }
 
 // ── GOOGLE SIGN IN ─────────────────────────────────────────────
 function handleGoogleSignIn(response){
-  const base64Url = response.credential.split('.')[1];
-  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-  const payload = JSON.parse(window.atob(base64));
-  const name  = payload.name || payload.email.split('@')[0];
-  const email = payload.email;
-  window.currentUser = { name, email, phone:'', isOwner:false, isCreator:false, businesses:[] };
-  // Force close modal — Google iframe fires callback outside normal DOM flow
-  const forceClose = ()=>{
-    const ov = document.getElementById('regOverlay');
-    if(ov){ ov.classList.remove('show'); ov.style.display='none'; }
-    const btnUnete = document.getElementById('btnUnete');
-    if(btnUnete) btnUnete.style.display = 'none';
-    const avatar = document.getElementById('userAvatar');
-    if(avatar) avatar.textContent = name.charAt(0).toUpperCase();
-    st('🎉 ¡Hola ' + name + '! Sesión iniciada');
-    checkAdminAccess();
-  };
-  setTimeout(forceClose, 150);
+  try{
+    const cred = firebase.auth.GoogleAuthProvider.credential(response.credential);
+    fbAuth.signInWithCredential(cred)
+      .then(function(){ st('🎉 ¡Sesión iniciada con Google!'); })
+      .catch(function(e){ console.error('Google signin', e); st('⚠️ No se pudo iniciar sesión con Google'); });
+  }catch(e){ console.error(e); st('⚠️ Error de inicio de sesión'); }
 }
 
 function doLogin(){
   const email = document.getElementById('loginEmail').value.trim();
-  const name  = email ? email.split('@')[0] : '';
+  const pass  = document.getElementById('loginPass') ? document.getElementById('loginPass').value : '';
   if(!email){ st('⚠️ Ingresa tu email'); return; }
-  window.currentUser = { name, email, phone:'', isOwner:false, isCreator:false, businesses:[] };
-  const ov = document.getElementById('regOverlay');
-  if(ov){ ov.classList.remove('show'); ov.style.display='none'; }
-  const avatar = document.getElementById('userAvatar');
-  if(avatar) avatar.textContent = name.charAt(0).toUpperCase();
-  const btnUnete = document.getElementById('btnUnete');
-  if(btnUnete) btnUnete.style.display = 'none';
-  st('🎉 ¡Bienvenido/a ' + name + '!');
-  setTimeout(checkAdminAccess, 100);
+  if(!pass){ st('⚠️ Ingresa tu contraseña'); return; }
+  fbAuth.signInWithEmailAndPassword(email, pass)
+    .then(function(){ st('🎉 ¡Bienvenido/a de vuelta!'); })
+    .catch(function(e){
+      console.error('login', e);
+      if(e && (e.code==='auth/wrong-password' || e.code==='auth/invalid-credential')){ st('⚠️ Correo o contraseña incorrectos'); }
+      else if(e && e.code==='auth/user-not-found'){ st('⚠️ No existe una cuenta con ese correo'); }
+      else { st('⚠️ No se pudo iniciar sesión'); }
+    });
 }
 
 // ── PHONE VERIFY ───────────────────────────────────────────────
@@ -2338,6 +2454,10 @@ if(document.readyState === 'loading'){
         <div class="admin-stat-num" id="adStatSolicitudes">0</div>
         <div class="admin-stat-label">Solicitudes</div>
       </div>
+      <div class="admin-stat">
+        <div class="admin-stat-num" id="adStatUsuarios">0</div>
+        <div class="admin-stat-label">Usuarios</div>
+      </div>
     </div>
 
     <!-- Tabs -->
@@ -2345,6 +2465,7 @@ if(document.readyState === 'loading'){
       <button class="admin-tab active" onclick="adminTab('negocios',this)">🏪 Negocios</button>
       <button class="admin-tab" onclick="adminTab('solicitudes',this)">📋 Solicitudes</button>
       <button class="admin-tab" onclick="adminTab('videos',this)">🎬 Videos</button>
+      <button class="admin-tab" onclick="adminTab('usuarios',this)">👥 Usuarios</button>
     </div>
 
     <!-- Negocios -->
@@ -2363,6 +2484,12 @@ if(document.readyState === 'loading'){
     <div id="adTabVideos" class="admin-section" style="display:none">
       <div class="admin-sec-title">Videos subidos</div>
       <div id="adListVideos"></div>
+    </div>
+
+    <!-- Usuarios -->
+    <div id="adTabUsuarios" class="admin-section" style="display:none">
+      <div class="admin-sec-title">Usuarios registrados</div>
+      <div id="adListUsuarios"><div class="admin-empty">Cargando…</div></div>
     </div>
 
   </div>
@@ -2414,6 +2541,37 @@ function adminTab(tab, btn){
   document.getElementById('adTabNegocios').style.display    = tab==='negocios'    ? 'block':'none';
   document.getElementById('adTabSolicitudes').style.display = tab==='solicitudes' ? 'block':'none';
   document.getElementById('adTabVideos').style.display      = tab==='videos'      ? 'block':'none';
+  const usuTab = document.getElementById('adTabUsuarios');
+  if(usuTab){ usuTab.style.display = tab==='usuarios' ? 'block':'none'; if(tab==='usuarios'){ loadAdminUsers(); } }
+}
+
+// Lista todos los usuarios registrados desde Firestore
+async function loadAdminUsers(){
+  const list = document.getElementById('adListUsuarios');
+  if(!list) return;
+  list.innerHTML = '<div class="admin-empty">Cargando…</div>';
+  try{
+    const snap = await fbDB.collection('usuarios').orderBy('createdAt','desc').get();
+    const stat = document.getElementById('adStatUsuarios');
+    if(stat) stat.textContent = snap.size;
+    if(snap.empty){ list.innerHTML = '<div class="admin-empty">Aún no hay usuarios registrados</div>'; return; }
+    let rows = '';
+    snap.forEach(function(doc){
+      const u = doc.data();
+      const fecha = u.createdAt && u.createdAt.toDate ? u.createdAt.toDate().toLocaleDateString('es-MX') : '';
+      const tipo = u.isOwner ? '🏪 Propietario' : (u.isCreator ? '🎥 Creador' : '👤 Usuario');
+      rows += '<div class="admin-item">'
+        + '<div class="admin-item-icon">'+(u.isOwner?'🏪':(u.isCreator?'🎥':'👤'))+'</div>'
+        + '<div class="admin-item-info">'
+        + '<div class="admin-item-name">'+(u.name||'(sin nombre)')+'</div>'
+        + '<div class="admin-item-meta">'+(u.email||'')+' · '+tipo+' · 🪙 '+(u.coins||0)+(fecha?(' · '+fecha):'')+'</div>'
+        + '</div></div>';
+    });
+    list.innerHTML = rows;
+  }catch(e){
+    console.error('loadAdminUsers', e);
+    list.innerHTML = '<div class="admin-empty">Error al cargar usuarios (revisa reglas de Firestore)</div>';
+  }
 }
 
 function renderAdminPanel(){
@@ -2421,6 +2579,7 @@ function renderAdminPanel(){
   document.getElementById('adStatNegocios').textContent    = places.length;
   document.getElementById('adStatVideos').textContent      = places.reduce((a,p)=>(p.videos?a+p.videos.length:a),0);
   document.getElementById('adStatSolicitudes').textContent = window.adminSolicitudes.length;
+  loadAdminUsers();
 
   // Negocios list
   const listN = document.getElementById('adListNegocios');
