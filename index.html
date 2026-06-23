@@ -419,6 +419,43 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 .overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:2500;display:none;}
 .overlay.show{display:block;}
 
+
+/* ═══ OWNER DASHBOARD ═══ */
+.dash-overlay{position:fixed;inset:0;z-index:9500;background:#0a1622;display:none;flex-direction:column;}
+.dash-overlay.show{display:flex;}
+.dash-topbar{display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,0.07);background:rgba(13,27,42,0.6);}
+.dash-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:15px;color:#FF5722;letter-spacing:1px;}
+.dash-biz{flex:1;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dash-close{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;color:#fff;font-size:16px;cursor:pointer;flex-shrink:0;}
+.dash-tabs{display:flex;gap:6px;padding:12px 14px;overflow-x:auto;border-bottom:1px solid rgba(255,255,255,0.06);}
+.dash-tab{flex:1;min-width:88px;padding:9px 6px;border-radius:10px;border:1.5px solid rgba(255,87,34,0.25);background:transparent;color:#94a3b8;font-family:'Syne',sans-serif;font-weight:700;font-size:11px;cursor:pointer;white-space:nowrap;transition:all .15s;}
+.dash-tab.active{background:#FF5722;border-color:#FF5722;color:#fff;}
+.dash-body{flex:1;overflow-y:auto;padding:18px;max-width:640px;width:100%;margin:0 auto;}
+.dash-sec{display:none;}
+.dash-sec.active{display:block;}
+.dash-field{margin-bottom:14px;}
+.dash-label{font-size:12px;color:#94a3b8;font-weight:600;margin-bottom:6px;display:block;}
+.dash-input,.dash-textarea{width:100%;background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;padding:11px 13px;color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;box-sizing:border-box;}
+.dash-input:focus,.dash-textarea:focus{outline:none;border-color:#FF5722;}
+.dash-textarea{resize:vertical;min-height:70px;}
+.dash-btn{width:100%;padding:13px;border-radius:12px;border:none;background:linear-gradient(135deg,#FF5722,#FF7043);color:#fff;font-family:'Syne',sans-serif;font-weight:800;font-size:14px;cursor:pointer;margin-top:6px;}
+.dash-btn:active{transform:scale(0.98);}
+.dash-btn-ghost{background:rgba(255,255,255,0.06);color:#fff;border:1.5px solid rgba(255,255,255,0.12);}
+.dash-photo{width:84px;height:84px;border-radius:14px;object-fit:cover;background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:30px;color:#475569;cursor:pointer;overflow:hidden;}
+.dash-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:12px;margin-bottom:10px;display:flex;align-items:center;gap:12px;}
+.dash-card-img{width:52px;height:52px;border-radius:10px;object-fit:cover;background:rgba(255,87,34,0.12);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.dash-card-info{flex:1;min-width:0;}
+.dash-card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:#fff;}
+.dash-card-meta{font-size:12px;color:#22C55E;margin-top:2px;}
+.dash-card-sub{font-size:11px;color:#94a3b8;margin-top:2px;}
+.dash-card-del{background:rgba(239,68,68,0.12);border:none;color:#f87171;border-radius:8px;padding:7px 10px;font-size:12px;cursor:pointer;flex-shrink:0;}
+.dash-sec-title{font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:#fff;margin-bottom:4px;}
+.dash-sec-sub{font-size:12px;color:#94a3b8;margin-bottom:16px;}
+.dash-add-box{background:rgba(255,255,255,0.03);border:1px dashed rgba(255,87,34,0.35);border-radius:14px;padding:14px;margin-bottom:16px;}
+.dash-row2{display:flex;gap:10px;}
+.dash-row2 > *{flex:1;}
+.dash-empty{text-align:center;color:#64748B;font-size:13px;padding:24px 0;}
+.dash-saving{font-size:11px;color:#22C55E;text-align:center;margin-top:8px;height:14px;}
 </style>
 <!-- ═══ FIREBASE (compat) ═══ -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -729,6 +766,12 @@ async function fbLogout(){
     <div class="dacts" id="dac"></div>
     
     <!-- CLAIM THIS BUSINESS BANNER -->
+    <div id="dashBanner" style="display:none">
+      <div class="claim-this-biz" onclick="openOwnerDash(); return false;">
+        <div class="claim-this-biz-title" style="pointer-events:none">🏬 Gestionar mi negocio</div>
+        <div class="claim-this-biz-text" style="pointer-events:none">Abre tu panel para editar perfil, menú, promociones y videos.</div>
+      </div>
+    </div>
     <div id="claimBanner" style="display:none">
       <div class="claim-this-biz" onclick="claimThisBusiness(); return false;">
         <div class="claim-this-biz-title" style="pointer-events:none">🏪 ¿Este negocio es tuyo?</div>
@@ -846,6 +889,10 @@ async function fbLogout(){
     <div class="um-item-icon">🏪</div>
     <div>Convertirme en Propietario</div>
   </div>
+  <div class="um-item" id="umDashItem" style="display:none" onclick="openOwnerDash()">
+    <div class="um-item-icon">🏬</div>
+    <div>Mi Negocio (Panel)</div>
+  </div>
   <div class="um-item" onclick="st('🎥 Próximamente: registrarte como Creador'); closeUserMenu();">
     <div class="um-item-icon">🎥</div>
     <div>Convertirme en Creador</div>
@@ -863,6 +910,92 @@ async function fbLogout(){
   <div class="um-item" onclick="fbLogout();">
     <div class="um-item-icon">🚪</div>
     <div>Cerrar sesión</div>
+  </div>
+</div>
+
+<!-- ═══ OWNER DASHBOARD ═══ -->
+<div class="dash-overlay" id="ownerDashOverlay">
+  <div class="dash-topbar">
+    <div class="dash-logo">YUMMAP</div>
+    <div class="dash-biz" id="dashBizName">Mi Negocio</div>
+    <button class="dash-close" onclick="closeOwnerDash()">✕</button>
+  </div>
+  <div class="dash-tabs">
+    <button class="dash-tab active" onclick="dashTab('perfil',this)">🏪 Perfil</button>
+    <button class="dash-tab" onclick="dashTab('menu',this)">🍽️ Menú</button>
+    <button class="dash-tab" onclick="dashTab('promos',this)">🔥 Promos</button>
+    <button class="dash-tab" onclick="dashTab('videos',this)">🎬 Videos</button>
+  </div>
+  <div class="dash-body">
+
+    <!-- PERFIL -->
+    <div class="dash-sec active" id="dashPerfil">
+      <div class="dash-sec-title">Perfil del negocio</div>
+      <div class="dash-sec-sub">Así te verán los clientes en el mapa.</div>
+      <div style="display:flex;gap:14px;align-items:center;margin-bottom:16px">
+        <div class="dash-photo" id="dashPhoto" onclick="document.getElementById('dashPhotoInput').click()">📷</div>
+        <div style="font-size:12px;color:#94a3b8">Foto / logo del negocio<br>Toca para subir</div>
+        <input type="file" id="dashPhotoInput" accept="image/*" style="display:none" onchange="dashUploadPhoto(this)">
+      </div>
+      <div class="dash-field"><label class="dash-label">Nombre del negocio</label><input class="dash-input" id="dashName" placeholder="Ej. Tacos El Buen Sabor"></div>
+      <div class="dash-field"><label class="dash-label">Descripción</label><textarea class="dash-textarea" id="dashDesc" placeholder="¿Qué te hace especial?"></textarea></div>
+      <div class="dash-row2">
+        <div class="dash-field"><label class="dash-label">Teléfono / WhatsApp</label><input class="dash-input" id="dashPhone" placeholder="+52 983..."></div>
+        <div class="dash-field"><label class="dash-label">Horario</label><input class="dash-input" id="dashHours" placeholder="Lun-Dom 9am-10pm"></div>
+      </div>
+      <div class="dash-field"><label class="dash-label">Dirección</label><input class="dash-input" id="dashAddr" placeholder="Calle, colonia, ciudad"></div>
+      <button class="dash-btn" onclick="dashSavePerfil()">Guardar perfil</button>
+      <div class="dash-saving" id="dashPerfilMsg"></div>
+    </div>
+
+    <!-- MENU -->
+    <div class="dash-sec" id="dashMenu">
+      <div class="dash-sec-title">Menú</div>
+      <div class="dash-sec-sub">Agrega tus platillos con precio y foto.</div>
+      <div class="dash-add-box">
+        <div class="dash-row2">
+          <div class="dash-field"><label class="dash-label">Platillo</label><input class="dash-input" id="miNombre" placeholder="Ej. Taco de pastor"></div>
+          <div class="dash-field"><label class="dash-label">Precio (MXN)</label><input class="dash-input" id="miPrecio" type="number" placeholder="25"></div>
+        </div>
+        <div class="dash-field"><label class="dash-label">Foto (opcional)</label><input type="file" id="miFoto" accept="image/*" class="dash-input"></div>
+        <button class="dash-btn" onclick="dashAddMenu()">+ Agregar platillo</button>
+      </div>
+      <div id="dashMenuList"></div>
+    </div>
+
+    <!-- PROMOS -->
+    <div class="dash-sec" id="dashPromos">
+      <div class="dash-sec-title">Promociones</div>
+      <div class="dash-sec-sub">Ofertas que verán los clientes en tu negocio.</div>
+      <div class="dash-add-box">
+        <div class="dash-field"><label class="dash-label">Título</label><input class="dash-input" id="prTitulo" placeholder="Ej. 2x1 en cervezas"></div>
+        <div class="dash-field"><label class="dash-label">Detalle</label><input class="dash-input" id="prDesc" placeholder="Ej. Lunes a viernes 5-7pm con YumMap"></div>
+        <div class="dash-field"><label class="dash-label">Tipo</label>
+          <select class="dash-input" id="prTipo">
+            <option value="descuento">💰 Descuento</option>
+            <option value="2x1">🎁 2x1</option>
+            <option value="gratis">✨ Gratis</option>
+            <option value="combo">🍔 Combo</option>
+            <option value="coins">🪙 Doble Coins</option>
+          </select>
+        </div>
+        <button class="dash-btn" onclick="dashAddPromo()">+ Agregar promoción</button>
+      </div>
+      <div id="dashPromoList"></div>
+    </div>
+
+    <!-- VIDEOS -->
+    <div class="dash-sec" id="dashVideos">
+      <div class="dash-sec-title">Videos</div>
+      <div class="dash-sec-sub">Pega el link de tus videos de TikTok, Instagram o YouTube.</div>
+      <div class="dash-add-box">
+        <div class="dash-field"><label class="dash-label">Título del video</label><input class="dash-input" id="viTitulo" placeholder="Ej. Recorrido por el local"></div>
+        <div class="dash-field"><label class="dash-label">Link (URL)</label><input class="dash-input" id="viUrl" placeholder="https://..."></div>
+        <button class="dash-btn" onclick="dashAddVideo()">+ Agregar video</button>
+      </div>
+      <div id="dashVideoList"></div>
+    </div>
+
   </div>
 </div>
 
@@ -1334,6 +1467,214 @@ function locateMe(){
   }, { enableHighAccuracy:true, timeout:10000, maximumAge:0 });
 }
 
+// ══════════════════════════════════════════════════════════════
+//  DASHBOARD DEL PROPIETARIO
+// ══════════════════════════════════════════════════════════════
+let dashBiz = null;        // datos del negocio en memoria
+let dashBizId = null;      // id del doc (= uid del propietario)
+
+function fileToBase64(file){
+  return new Promise(function(res,rej){
+    const r = new FileReader();
+    r.onload = function(e){ res(e.target.result); };
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+async function openOwnerDash(){
+  if(typeof closeUserMenu==='function') closeUserMenu();
+  if(!window.currentUser){ st('🔐 Inicia sesión primero'); return; }
+  if(window.currentUser.ownerStatus !== 'verified'){
+    st('🏪 Primero verifica tu identidad como propietario');
+    setTimeout(function(){ if(typeof openOwnerVerif==='function') openOwnerVerif(); }, 500);
+    return;
+  }
+  if(!fbAuth.currentUser){ st('⚠️ Sesión no válida, vuelve a entrar'); return; }
+  dashBizId = fbAuth.currentUser.uid;
+  st('Cargando tu negocio...');
+  try{
+    const ref = fbDB.collection('negocios').doc(dashBizId);
+    let snap = await ref.get();
+    if(!snap.exists){
+      // Crear negocio inicial (prefill con el nombre reclamado si existe)
+      dashBiz = {
+        ownerUid: dashBizId,
+        name: window.currentUser.pendingClaim || (window.currentUser.name + ' — Mi Negocio'),
+        emoji: '🍽️', descripcion:'', telefono: window.currentUser.phone || '',
+        horario:'', direccion:'', foto:'',
+        menu:[], promos:[], videos:[],
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      await ref.set(dashBiz);
+    } else {
+      dashBiz = snap.data();
+      dashBiz.menu = dashBiz.menu || [];
+      dashBiz.promos = dashBiz.promos || [];
+      dashBiz.videos = dashBiz.videos || [];
+    }
+    renderDash();
+    document.getElementById('ownerDashOverlay').classList.add('show');
+  }catch(e){ console.error('openOwnerDash', e); st('⚠️ No se pudo cargar el negocio'); }
+}
+
+function closeOwnerDash(){
+  document.getElementById('ownerDashOverlay').classList.remove('show');
+}
+
+function dashTab(tab, btn){
+  document.querySelectorAll('.dash-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.dash-sec').forEach(s=>s.classList.remove('active'));
+  const map = {perfil:'dashPerfil', menu:'dashMenu', promos:'dashPromos', videos:'dashVideos'};
+  const el = document.getElementById(map[tab]);
+  if(el) el.classList.add('active');
+}
+
+function renderDash(){
+  document.getElementById('dashBizName').textContent = dashBiz.name || 'Mi Negocio';
+  // Perfil
+  document.getElementById('dashName').value  = dashBiz.name || '';
+  document.getElementById('dashDesc').value  = dashBiz.descripcion || '';
+  document.getElementById('dashPhone').value = dashBiz.telefono || '';
+  document.getElementById('dashHours').value = dashBiz.horario || '';
+  document.getElementById('dashAddr').value  = dashBiz.direccion || '';
+  const ph = document.getElementById('dashPhoto');
+  if(dashBiz.foto){ ph.innerHTML = '<img src="'+dashBiz.foto+'" style="width:100%;height:100%;object-fit:cover">'; }
+  else { ph.textContent = '📷'; }
+  renderDashMenu();
+  renderDashPromos();
+  renderDashVideos();
+}
+
+async function dashPersist(field, value, msgEl){
+  try{
+    dashBiz[field] = value;
+    await fbDB.collection('negocios').doc(dashBizId).update({ [field]: value, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    if(msgEl){ const m=document.getElementById(msgEl); if(m){ m.textContent='✓ Guardado'; setTimeout(()=>{m.textContent='';},1800); } }
+    return true;
+  }catch(e){ console.error('persist '+field, e); st('⚠️ No se pudo guardar'); return false; }
+}
+
+// ── PERFIL ──
+async function dashSavePerfil(){
+  const name = document.getElementById('dashName').value.trim();
+  if(!name){ st('⚠️ Ponle nombre a tu negocio'); return; }
+  dashBiz.name        = name;
+  dashBiz.descripcion = document.getElementById('dashDesc').value.trim();
+  dashBiz.telefono    = document.getElementById('dashPhone').value.trim();
+  dashBiz.horario     = document.getElementById('dashHours').value.trim();
+  dashBiz.direccion   = document.getElementById('dashAddr').value.trim();
+  try{
+    await fbDB.collection('negocios').doc(dashBizId).update({
+      name:dashBiz.name, descripcion:dashBiz.descripcion, telefono:dashBiz.telefono,
+      horario:dashBiz.horario, direccion:dashBiz.direccion,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    document.getElementById('dashBizName').textContent = dashBiz.name;
+    const m=document.getElementById('dashPerfilMsg'); m.textContent='✓ Perfil guardado'; setTimeout(()=>{m.textContent='';},1800);
+  }catch(e){ console.error(e); st('⚠️ No se pudo guardar el perfil'); }
+}
+
+async function dashUploadPhoto(input){
+  const f = input.files && input.files[0]; if(!f) return;
+  st('📤 Subiendo foto...');
+  try{
+    const b64 = await fileToBase64(f);
+    const url = await uploadToImgBB(b64, 'yummap_biz_'+dashBizId);
+    if(url){ await dashPersist('foto', url, null); renderDash(); st('✓ Foto actualizada'); }
+    else { st('⚠️ No se pudo subir la foto'); }
+  }catch(e){ console.error(e); st('⚠️ Error al subir foto'); }
+}
+
+// ── MENU ──
+function renderDashMenu(){
+  const list = document.getElementById('dashMenuList');
+  if(!dashBiz.menu.length){ list.innerHTML='<div class="dash-empty">Aún no tienes platillos</div>'; return; }
+  list.innerHTML = dashBiz.menu.map(function(it,i){
+    const img = it.foto ? ('<img class="dash-card-img" src="'+it.foto+'">') : '<div class="dash-card-img">🍽️</div>';
+    return '<div class="dash-card">'+img
+      +'<div class="dash-card-info"><div class="dash-card-title">'+it.nombre+'</div>'
+      +'<div class="dash-card-meta">$'+it.precio+' MXN</div></div>'
+      +'<button class="dash-card-del" onclick="dashDelMenu('+i+')">🗑️</button></div>';
+  }).join('');
+}
+async function dashAddMenu(){
+  const nombre = document.getElementById('miNombre').value.trim();
+  const precio = document.getElementById('miPrecio').value.trim();
+  if(!nombre || !precio){ st('⚠️ Pon nombre y precio'); return; }
+  let foto = '';
+  const fInput = document.getElementById('miFoto');
+  if(fInput.files && fInput.files[0]){
+    st('📤 Subiendo foto del platillo...');
+    try{ const b64=await fileToBase64(fInput.files[0]); foto = await uploadToImgBB(b64,'yummap_dish_'+Date.now()) || ''; }catch(e){}
+  }
+  dashBiz.menu.push({ nombre:nombre, precio:precio, foto:foto });
+  await dashPersist('menu', dashBiz.menu, null);
+  document.getElementById('miNombre').value=''; document.getElementById('miPrecio').value=''; fInput.value='';
+  renderDashMenu(); st('✓ Platillo agregado');
+}
+async function dashDelMenu(i){
+  dashBiz.menu.splice(i,1);
+  await dashPersist('menu', dashBiz.menu, null);
+  renderDashMenu();
+}
+
+// ── PROMOS ──
+function renderDashPromos(){
+  const list = document.getElementById('dashPromoList');
+  if(!dashBiz.promos.length){ list.innerHTML='<div class="dash-empty">Aún no tienes promociones</div>'; return; }
+  const ico = {descuento:'💰','2x1':'🎁',gratis:'✨',combo:'🍔',coins:'🪙'};
+  list.innerHTML = dashBiz.promos.map(function(p,i){
+    return '<div class="dash-card"><div class="dash-card-img">'+(ico[p.type]||'🔥')+'</div>'
+      +'<div class="dash-card-info"><div class="dash-card-title">'+p.title+'</div>'
+      +'<div class="dash-card-sub">'+(p.desc||'')+'</div></div>'
+      +'<button class="dash-card-del" onclick="dashDelPromo('+i+')">🗑️</button></div>';
+  }).join('');
+}
+async function dashAddPromo(){
+  const title = document.getElementById('prTitulo').value.trim();
+  const desc  = document.getElementById('prDesc').value.trim();
+  const type  = document.getElementById('prTipo').value;
+  if(!title){ st('⚠️ Ponle título a la promo'); return; }
+  dashBiz.promos.push({ title:title, desc:desc, type:type });
+  await dashPersist('promos', dashBiz.promos, null);
+  document.getElementById('prTitulo').value=''; document.getElementById('prDesc').value='';
+  renderDashPromos(); st('✓ Promoción agregada');
+}
+async function dashDelPromo(i){
+  dashBiz.promos.splice(i,1);
+  await dashPersist('promos', dashBiz.promos, null);
+  renderDashPromos();
+}
+
+// ── VIDEOS ──
+function renderDashVideos(){
+  const list = document.getElementById('dashVideoList');
+  if(!dashBiz.videos.length){ list.innerHTML='<div class="dash-empty">Aún no tienes videos</div>'; return; }
+  list.innerHTML = dashBiz.videos.map(function(v,i){
+    return '<div class="dash-card"><div class="dash-card-img">🎬</div>'
+      +'<div class="dash-card-info"><div class="dash-card-title">'+v.titulo+'</div>'
+      +'<div class="dash-card-sub" style="word-break:break-all">'+v.url+'</div></div>'
+      +'<button class="dash-card-del" onclick="dashDelVideo('+i+')">🗑️</button></div>';
+  }).join('');
+}
+async function dashAddVideo(){
+  const titulo = document.getElementById('viTitulo').value.trim();
+  const url    = document.getElementById('viUrl').value.trim();
+  if(!titulo || !url){ st('⚠️ Pon título y link'); return; }
+  if(!/^https?:\/\//.test(url)){ st('⚠️ El link debe empezar con http'); return; }
+  dashBiz.videos.push({ titulo:titulo, url:url });
+  await dashPersist('videos', dashBiz.videos, null);
+  document.getElementById('viTitulo').value=''; document.getElementById('viUrl').value='';
+  renderDashVideos(); st('✓ Video agregado');
+}
+async function dashDelVideo(i){
+  dashBiz.videos.splice(i,1);
+  await dashPersist('videos', dashBiz.videos, null);
+  renderDashVideos();
+}
+
 function makeIcon(p){
   const color = p.featured?'#FF5722': p.promos&&p.promos.length?'#22C55E':'#ffffff';
   const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="120" height="36">
@@ -1418,14 +1759,16 @@ function buildCards(list){
 function openD(i){
   const p=allP()[i]; currentPlace=p;
   
-  // Show/hide claim banner
+  // Show/hide claim vs dashboard banner
   const claimBanner = document.getElementById('claimBanner');
-  if(claimBanner){
-    if(p.claimedBy){
-      claimBanner.style.display = 'none';
-    } else {
-      claimBanner.style.display = 'block';
-    }
+  const dashBanner  = document.getElementById('dashBanner');
+  const isVerified  = window.currentUser && window.currentUser.ownerStatus === 'verified';
+  if(isVerified){
+    if(dashBanner)  dashBanner.style.display  = 'block';
+    if(claimBanner) claimBanner.style.display = 'none';
+  } else {
+    if(dashBanner)  dashBanner.style.display  = 'none';
+    if(claimBanner) claimBanner.style.display = p.claimedBy ? 'none' : 'block';
   }
   
   const deEl = document.getElementById('de');
@@ -2203,17 +2546,27 @@ async function uploadToImgBB(base64data, name){
 }
 
 function submitOwnerVerif(){
-  // Log en admin panel
+  // Persistir estado del usuario y crear solicitud en Firestore
+  window._lastSolicitudId = null;
   if(window.currentUser){
     window.currentUser.ownerStatus = 'pending';
     window.currentUser.submittedAt = new Date().toISOString();
-    window.adminSolicitudes = window.adminSolicitudes || [];
-    window.adminSolicitudes.push({
-      name:  window.currentUser.name  || '(sin nombre)',
-      email: window.currentUser.email || '(sin email)',
-      phone: window.currentUser.phone || '',
-      date:  new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'}),
-    });
+    try{ fbSaveUser({ ownerStatus:'pending' }); }catch(e){ console.error(e); }
+    try{
+      const solRef = fbDB.collection('solicitudes').doc();
+      window._lastSolicitudId = solRef.id;
+      solRef.set({
+        id: solRef.id,
+        tipo: 'verificacion',
+        uid: (fbAuth.currentUser && fbAuth.currentUser.uid) || null,
+        name:  window.currentUser.name  || '(sin nombre)',
+        email: window.currentUser.email || '(sin email)',
+        phone: window.currentUser.phone || '',
+        status: 'pending',
+        docs: [],
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).catch(function(e){ console.error('solicitud create', e); });
+    }catch(e){ console.error(e); }
   }
 
   const userName  = window.currentUser?.name  || '(sin nombre)';
@@ -2267,6 +2620,11 @@ async function uploadDocsBackground(baseWaUrl){
     // Actualizar silenciosamente el banner
     const banner = document.getElementById('waBanner');
     if(banner && banner.classList.contains('show')) banner.href = waUrl2;
+    // Guardar los links de documentos en la solicitud de Firestore
+    if(window._lastSolicitudId){
+      try{ await fbDB.collection('solicitudes').doc(window._lastSolicitudId).update({ docs: links }); }
+      catch(e){ console.error('solicitud docs update', e); }
+    }
   }
 }
 
@@ -2299,6 +2657,8 @@ function toggleUserMenu(e){
         statusEl.className = 'um-status';
       }
     }
+    const dashItem = document.getElementById('umDashItem');
+    if(dashItem) dashItem.style.display = (window.currentUser.ownerStatus === 'verified') ? 'flex' : 'none';
   }
   menu.classList.toggle('show');
 }
@@ -2354,6 +2714,19 @@ function claimThisBusiness(){
   msg += 'Responde APROBAR para activar el dashboard de este negocio.';
   if(confirm('¿Confirmas reclamar "' + bizName + '" como tu negocio?\n\nSe enviará una solicitud de revisión.')){
     window.currentUser.pendingClaim = bizName;
+    // Persistir el reclamo en Firestore
+    try{
+      const ref = fbDB.collection('solicitudes').doc();
+      ref.set({
+        id: ref.id,
+        tipo: 'reclamo',
+        uid: (fbAuth.currentUser && fbAuth.currentUser.uid) || null,
+        name: userName, email: userEmail, phone: userPhone,
+        bizName: bizName, bizCategory: bizCat,
+        status: 'pending', docs: [],
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).catch(function(e){ console.error('reclamo create', e); });
+    }catch(e){ console.error(e); }
     closeD();
     const waUrlC = 'https://wa.me/' + WA_ADMIN + '?text=' + encodeURIComponent(msg);
     showWaBanner(waUrlC, '🏪 Reclamación lista — toca para enviar por WhatsApp');
@@ -2581,6 +2954,7 @@ function adminTab(tab, btn){
   btn.classList.add('active');
   document.getElementById('adTabNegocios').style.display    = tab==='negocios'    ? 'block':'none';
   document.getElementById('adTabSolicitudes').style.display = tab==='solicitudes' ? 'block':'none';
+  if(tab==='solicitudes'){ loadAdminSolicitudes(); }
   document.getElementById('adTabVideos').style.display      = tab==='videos'      ? 'block':'none';
   const usuTab = document.getElementById('adTabUsuarios');
   if(usuTab){ usuTab.style.display = tab==='usuarios' ? 'block':'none'; if(tab==='usuarios'){ loadAdminUsers(); } }
@@ -2634,19 +3008,8 @@ function renderAdminPanel(){
       <button class="admin-del" onclick="adminDeleteBiz(${i})">🗑️ Borrar</button>
     </div>`).join('') || '<div class="admin-empty">No hay negocios registrados</div>';
 
-  // Solicitudes list
-  const listS = document.getElementById('adListSolicitudes');
-  listS.innerHTML = window.adminSolicitudes.length ? window.adminSolicitudes.map((s,i)=>`
-    <div class="admin-item" id="adSol-${i}">
-      <div class="admin-item-icon">👤</div>
-      <div class="admin-item-info">
-        <div class="admin-item-name">${s.name}</div>
-        <div class="admin-item-meta">${s.email} · ${s.phone||''} · ${s.date}</div>
-      </div>
-      <button class="admin-approve" onclick="adminApproveSol(${i})">✅</button>
-      <button class="admin-del" onclick="adminRejectSol(${i})">✕</button>
-    </div>`).join('')
-    : '<div class="admin-empty">Sin solicitudes pendientes</div>';
+  // Solicitudes (se cargan desde Firestore)
+  loadAdminSolicitudes();
 
   // Videos list
   const listV = document.getElementById('adListVideos');
@@ -2685,21 +3048,60 @@ function adminDeleteVideo(bizIdx, vidIdx){
   }
 }
 
-function adminApproveSol(idx){
-  const sol = window.adminSolicitudes[idx];
-  window.adminSolicitudes.splice(idx,1);
-  st('✅ ' + sol.name + ' aprobado como propietario');
-  // Notify via WhatsApp
-  const msg = '✅ *YumMap* — Tu solicitud de propietario fue APROBADA. Ya puedes reclamar y gestionar tus negocios. Ingresa a yummap.food';
-  if(sol.phone) window.open('https://wa.me/' + sol.phone.replace(/\D/g,'') + '?text=' + encodeURIComponent(msg), '_blank');
-  renderAdminPanel();
+// Carga solicitudes pendientes desde Firestore
+async function loadAdminSolicitudes(){
+  const listS = document.getElementById('adListSolicitudes');
+  if(!listS) return;
+  listS.innerHTML = '<div class="admin-empty">Cargando…</div>';
+  try{
+    const snap = await fbDB.collection('solicitudes').where('status','==','pending').get();
+    const stat = document.getElementById('adStatSolicitudes');
+    if(stat) stat.textContent = snap.size;
+    if(snap.empty){ listS.innerHTML = '<div class="admin-empty">Sin solicitudes pendientes</div>'; return; }
+    const docs = [];
+    snap.forEach(function(d){ docs.push(d.data()); });
+    docs.sort(function(a,b){ const ta=a.createdAt&&a.createdAt.seconds?a.createdAt.seconds:0; const tb=b.createdAt&&b.createdAt.seconds?b.createdAt.seconds:0; return tb-ta; });
+    listS.innerHTML = docs.map(function(s){
+      const icon = s.tipo==='reclamo' ? '🏪' : '👤';
+      const tipoTxt = s.tipo==='reclamo' ? ('Reclama: '+(s.bizName||'')) : 'Verificación';
+      const fecha = s.createdAt && s.createdAt.toDate ? s.createdAt.toDate().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'}) : '';
+      const docsLine = (s.docs && s.docs.length) ? ('<div class="admin-item-meta">📎 '+s.docs.length+' documento(s)</div>') : '';
+      const phone = (s.phone||'').replace(/\D/g,'');
+      return '<div class="admin-item" style="flex-wrap:wrap">'
+        + '<div class="admin-item-icon">'+icon+'</div>'
+        + '<div class="admin-item-info">'
+        + '<div class="admin-item-name">'+(s.name||'(sin nombre)')+'</div>'
+        + '<div class="admin-item-meta">'+(s.email||'')+' · '+(s.phone||'')+' · '+tipoTxt+(fecha?(' · '+fecha):'')+'</div>'
+        + docsLine
+        + '</div>'
+        + '<button class="admin-approve" onclick="adminApproveSol(\''+s.id+'\',\''+phone+'\',\''+(s.uid||'')+'\')">✅</button>'
+        + '<button class="admin-del" onclick="adminRejectSol(\''+s.id+'\',\''+(s.uid||'')+'\')">✕</button>'
+        + '</div>';
+    }).join('');
+  }catch(e){
+    console.error('loadAdminSolicitudes', e);
+    listS.innerHTML = '<div class="admin-empty">Error al cargar solicitudes</div>';
+  }
 }
 
-function adminRejectSol(idx){
-  const sol = window.adminSolicitudes[idx];
-  window.adminSolicitudes.splice(idx,1);
-  st('✕ Solicitud de ' + sol.name + ' rechazada');
-  renderAdminPanel();
+async function adminApproveSol(solId, phone, uid){
+  try{
+    await fbDB.collection('solicitudes').doc(solId).update({ status:'approved', resolvedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    if(uid){ await fbDB.collection('usuarios').doc(uid).update({ ownerStatus:'verified', isOwner:true }); }
+    st('✅ Propietario aprobado');
+    const msg = '✅ YumMap — Tu solicitud de propietario fue APROBADA. Ya puedes gestionar tus negocios en yummap.food';
+    if(phone) window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
+  }catch(e){ console.error('approve', e); st('⚠️ No se pudo aprobar'); }
+  loadAdminSolicitudes();
+}
+
+async function adminRejectSol(solId, uid){
+  try{
+    await fbDB.collection('solicitudes').doc(solId).update({ status:'rejected', resolvedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    if(uid){ await fbDB.collection('usuarios').doc(uid).update({ ownerStatus:'user' }); }
+    st('✕ Solicitud rechazada');
+  }catch(e){ console.error('reject', e); st('⚠️ No se pudo rechazar'); }
+  loadAdminSolicitudes();
 }
 
 // Hook into showSuccess to detect admin login
