@@ -625,8 +625,8 @@ async function fbLogout(){
       <button class="enter-btn" onclick="enterMap()">ENTRAR AL MAPA</button>
     </div>
     <div class="lstats">
-      <div class="lstat"><div class="lstat-num">6</div><div class="lstat-label">Negocios</div></div>
-      <div class="lstat"><div class="lstat-num">4</div><div class="lstat-label">Videos</div></div>
+      <div class="lstat"><div class="lstat-num">7</div><div class="lstat-label">Negocios</div></div>
+      <div class="lstat"><div class="lstat-num">5</div><div class="lstat-label">Videos</div></div>
       <div class="lstat"><div class="lstat-num" style="color:#22C55E">Coins</div><div class="lstat-label">Activos</div></div>
     </div>
   </div>
@@ -670,7 +670,7 @@ async function fbLogout(){
 <!-- BOTTOM SHEET -->
 <div class="bs" id="bs">
   <div class="sh" onclick="toggleSheet()"></div>
-  <div class="bst" id="bst">Tus lugares en Yummap · 6 negocios</div>
+  <div class="bst" id="bst">Tus lugares en Yummap · 7 negocios</div>
   <div class="cs" id="csc"></div>
 </div>
 
@@ -1392,6 +1392,19 @@ const PLACES = [
     reviews:[{u:"Roberto N.",s:"9.1",t:"El ambiente rockero + los tacos = experiencia única en Cancún."},{u:"Jake W.",s:"8.9",t:"Coolest taco spot ever, great vibes and even better tacos!"}],
     creator:true, hours:"Mar-Dom 6pm-2am", phone:"+52 998 000 0006"
   },
+  {
+    id:7, name:"Ugolina Pizzería Napoletana", emoji:"🍕", score:"9.2", type:"pizza",
+    lat:21.1104959, lng:-86.8535702,
+    sub:"Pizza napolitana · Plaza Aria, Av. Huayacán · Cancún",
+    tags:["Pizza","Napolitana","Horno de leña","Prosciutto","Pesto","Italiana","Rodrigo recomienda"],
+    tiktok:"",
+    video:"ugolina.m4v",
+    creator_name:"Rodrigo Madera",creator_handle:"@rodrigobuenamadera",creator_avatar:"R",creator_color:"#FF5722",owner_videos:[],
+    descripcion:"Pizza napolitana en horno de leña; masa suave, la sirven con tijera. $200-700 por persona. Amigable LGBTQ+, negocio de mujer empresaria. Reservas por WhatsApp. ugolina.com",
+    promos:[],
+    reviews:[],
+    creator:true, hours:"Lun-Mié 1pm-10:30pm, Jue 1pm-11:15pm, Vie-Sáb 1pm-11:30pm, Dom 1pm-8:30pm", phone:"+52 998 845 9300"
+  },
 ];
 
 const DARK_STYLE=[
@@ -1901,7 +1914,7 @@ function makePinSVG(p, selected=false){
   const fs = selected ? 11 : 9;
   const efs = selected ? 13 : 11;
   // Use canvas-free approach: colored dot + name only (no emoji in SVG = no encoding issues)
-  const dotColor = p.type==='taqueria'?'#FF5722':p.type==='mariscos'?'#3B82F6':p.type==='cafe'?'#92400E':'#FF5722';
+  const dotColor = p.type==='taqueria'?'#FF5722':p.type==='mariscos'?'#3B82F6':p.type==='cafe'?'#92400E':p.type==='pizza'?'#E11D48':'#FF5722';
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h+8}">
     <rect rx="13" width="${w}" height="${h}" fill="${bg}" stroke="${border}" stroke-width="${selected?2.5:1.5}"/>
     <circle cx="14" cy="${h/2}" r="${h/2-5}" fill="${selected?border:'white'}" opacity="${selected?0.3:0.25}"/>
@@ -2559,7 +2572,8 @@ function handleSearch(q){
     (p.creator_handle||'').toLowerCase().includes(q) ||
     (['tacos','taco'].some(k=>q.includes(k))&&p.type==='taqueria') ||
     (['mariscos','ceviche'].some(k=>q.includes(k))&&p.type==='mariscos') ||
-    (['café','cafe','coffee'].some(k=>q.includes(k))&&p.type==='cafe')
+    (['café','cafe','coffee'].some(k=>q.includes(k))&&p.type==='cafe') ||
+    (['pizza','pizzas','italiana'].some(k=>q.includes(k))&&p.type==='pizza')
   );
   const aiRow = q.length>2 ? aiAskRow(q) : '';
   if(!results.length){
@@ -2568,7 +2582,7 @@ function handleSearch(q){
   }
   box.innerHTML = aiRow + results.map(p=>{
     const i = allP().indexOf(p);
-    const typeLabel = p.type==='taqueria'?'Tacos':p.type==='mariscos'?'Mariscos':p.type==='cafe'?'Café':'Restaurante';
+    const typeLabel = p.type==='taqueria'?'Tacos':p.type==='mariscos'?'Mariscos':p.type==='cafe'?'Café':p.type==='pizza'?'Pizza':'Restaurante';
     return '<div class="sr-item" onclick="selectSearchResult('+i+')">'+
       '<div class="sr-emoji">'+p.emoji+'</div>'+
       '<div class="sr-info"><div class="sr-name">'+p.name+'</div>'+
