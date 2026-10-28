@@ -625,8 +625,8 @@ async function fbLogout(){
       <button class="enter-btn" onclick="enterMap()">ENTRAR AL MAPA</button>
     </div>
     <div class="lstats">
-      <div class="lstat"><div class="lstat-num">7</div><div class="lstat-label">Negocios</div></div>
-      <div class="lstat"><div class="lstat-num">5</div><div class="lstat-label">Videos</div></div>
+      <div class="lstat"><div class="lstat-num">8</div><div class="lstat-label">Negocios</div></div>
+      <div class="lstat"><div class="lstat-num">6</div><div class="lstat-label">Videos</div></div>
       <div class="lstat"><div class="lstat-num" style="color:#22C55E">Coins</div><div class="lstat-label">Activos</div></div>
     </div>
   </div>
@@ -670,7 +670,7 @@ async function fbLogout(){
 <!-- BOTTOM SHEET -->
 <div class="bs" id="bs">
   <div class="sh" onclick="toggleSheet()"></div>
-  <div class="bst" id="bst">Tus lugares en Yummap · 7 negocios</div>
+  <div class="bst" id="bst">Tus lugares en Yummap · 8 negocios</div>
   <div class="cs" id="csc"></div>
 </div>
 
@@ -1404,6 +1404,18 @@ const PLACES = [
     promos:[],
     reviews:[],
     creator:true, hours:"Lun-Mié 1pm-10:30pm, Jue 1pm-11:15pm, Vie-Sáb 1pm-11:30pm, Dom 1pm-8:30pm", phone:"+52 998 845 9300"
+  },  {
+    id:8, name:"Lonchería El Pocito", emoji:"🫔", score:"9.2", type:"yucateca",
+    lat:21.169562, lng:-86.8340639,
+    sub:"Comida yucateca · Calle 31 Norte, SM 63, Centro · Cancún",
+    tags:["Yucateca","Poc chuc","Longaniza","Papadzules","Sopa de lima","Tamales","Desayunos","Tradicional","Rodrigo recomienda"],
+    tiktok:"",
+    video:"elpocito.m4v",
+    creator_name:"Rodrigo Madera",creator_handle:"@rodrigobuenamadera",creator_avatar:"R",creator_color:"#FF5722",owner_videos:[],
+    descripcion:"Cocina yucateca tradicional de Doña Manuela Uch, fundadora. Longaniza asada, poc chuc, papadzules, sopa de lima, tamales y agua de horchata; desayunos y menú del día. $200-300 por persona. 4.6 en Google con más de 5 mil opiniones.",
+    promos:[],
+    reviews:[],
+    creator:true, hours:"Abre desde las 8am (desayunos y menú del día)", phone:"+52 998 242 9268"
   },
 ];
 
@@ -1914,7 +1926,7 @@ function makePinSVG(p, selected=false){
   const fs = selected ? 11 : 9;
   const efs = selected ? 13 : 11;
   // Use canvas-free approach: colored dot + name only (no emoji in SVG = no encoding issues)
-  const dotColor = p.type==='taqueria'?'#FF5722':p.type==='mariscos'?'#3B82F6':p.type==='cafe'?'#92400E':p.type==='pizza'?'#E11D48':'#FF5722';
+  const dotColor = p.type==='taqueria'?'#FF5722':p.type==='mariscos'?'#3B82F6':p.type==='cafe'?'#92400E':p.type==='pizza'?'#E11D48':p.type==='yucateca'?'#16A34A':'#FF5722';
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h+8}">
     <rect rx="13" width="${w}" height="${h}" fill="${bg}" stroke="${border}" stroke-width="${selected?2.5:1.5}"/>
     <circle cx="14" cy="${h/2}" r="${h/2-5}" fill="${selected?border:'white'}" opacity="${selected?0.3:0.25}"/>
@@ -2573,7 +2585,8 @@ function handleSearch(q){
     (['tacos','taco'].some(k=>q.includes(k))&&p.type==='taqueria') ||
     (['mariscos','ceviche'].some(k=>q.includes(k))&&p.type==='mariscos') ||
     (['café','cafe','coffee'].some(k=>q.includes(k))&&p.type==='cafe') ||
-    (['pizza','pizzas','italiana'].some(k=>q.includes(k))&&p.type==='pizza')
+    (['pizza','pizzas','italiana'].some(k=>q.includes(k))&&p.type==='pizza') ||
+    (['yucateca','yucateco','poc chuc','cochinita','panucho','salbut','desayuno'].some(k=>q.includes(k))&&p.type==='yucateca')
   );
   const aiRow = q.length>2 ? aiAskRow(q) : '';
   if(!results.length){
@@ -2582,7 +2595,7 @@ function handleSearch(q){
   }
   box.innerHTML = aiRow + results.map(p=>{
     const i = allP().indexOf(p);
-    const typeLabel = p.type==='taqueria'?'Tacos':p.type==='mariscos'?'Mariscos':p.type==='cafe'?'Café':p.type==='pizza'?'Pizza':'Restaurante';
+    const typeLabel = p.type==='taqueria'?'Tacos':p.type==='mariscos'?'Mariscos':p.type==='cafe'?'Café':p.type==='pizza'?'Pizza':p.type==='yucateca'?'Yucateca':'Restaurante';
     return '<div class="sr-item" onclick="selectSearchResult('+i+')">'+
       '<div class="sr-emoji">'+p.emoji+'</div>'+
       '<div class="sr-info"><div class="sr-name">'+p.name+'</div>'+
