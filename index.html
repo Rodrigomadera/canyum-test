@@ -625,8 +625,8 @@ async function fbLogout(){
       <button class="enter-btn" onclick="enterMap()">ENTRAR AL MAPA</button>
     </div>
     <div class="lstats">
-      <div class="lstat"><div class="lstat-num">9</div><div class="lstat-label">Negocios</div></div>
-      <div class="lstat"><div class="lstat-num">7</div><div class="lstat-label">Videos</div></div>
+      <div class="lstat"><div class="lstat-num">10</div><div class="lstat-label">Negocios</div></div>
+      <div class="lstat"><div class="lstat-num">8</div><div class="lstat-label">Videos</div></div>
       <div class="lstat"><div class="lstat-num" style="color:#22C55E">Coins</div><div class="lstat-label">Activos</div></div>
     </div>
   </div>
@@ -670,7 +670,7 @@ async function fbLogout(){
 <!-- BOTTOM SHEET -->
 <div class="bs" id="bs">
   <div class="sh" onclick="toggleSheet()"></div>
-  <div class="bst" id="bst">Tus lugares en Yummap · 9 negocios</div>
+  <div class="bst" id="bst">Tus lugares en Yummap · 10 negocios</div>
   <div class="cs" id="csc"></div>
 </div>
 
@@ -1428,6 +1428,18 @@ const PLACES = [
     promos:[],
     reviews:[],
     creator:true, hours:"Horario por confirmar", phone:""
+  },  {
+    id:10, name:"Los Gómez", emoji:"🍺", score:"9.4", type:"restaurante",
+    lat:21.1622758, lng:-86.8239767,
+    sub:"Restaurante · Av. Carlos Nader, SM 3 · Cancún",
+    tags:["Cerveza fría","La Cheve","Restaurante mexicano","Para llevar","Entrega a domicilio","Rodrigo recomienda"],
+    tiktok:"",
+    video:"lacheve.m4v",
+    creator_name:"Rodrigo Madera",creator_handle:"@rodrigobuenamadera",creator_avatar:"R",creator_color:"#FF5722",owner_videos:[],
+    descripcion:"Sale en 'La Cheve' (parte 1), la serie de Buena Madera que mide con termómetro qué tan fría sirven la cerveza en Cancún. Consumo en el lugar, pedidos desde el auto y entrega a domicilio. $200-300 por persona. 4.7 en Google con más de mil opiniones.",
+    promos:[],
+    reviews:[],
+    creator:true, hours:"Cierra a las 11pm", phone:"+52 998 559 4969"
   },
 ];
 
@@ -2599,6 +2611,7 @@ function handleSearch(q){
     (['café','cafe','coffee'].some(k=>q.includes(k))&&p.type==='cafe') ||
     (['pizza','pizzas','italiana'].some(k=>q.includes(k))&&p.type==='pizza') ||
     (['yucateca','yucateco','poc chuc','cochinita','panucho','salbut','desayuno'].some(k=>q.includes(k))&&p.type==='yucateca') ||
+    (['cerveza','cheve','chela','birra','beer'].some(k=>q.includes(k))&&(p.tags||[]).includes('Cerveza fría')) ||
     (['papa','papas','picaña','picana','carbón','carbon'].some(k=>q.includes(k))&&p.type==='papas')
   );
   const aiRow = q.length>2 ? aiAskRow(q) : '';
