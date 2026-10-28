@@ -625,8 +625,8 @@ async function fbLogout(){
       <button class="enter-btn" onclick="enterMap()">ENTRAR AL MAPA</button>
     </div>
     <div class="lstats">
-      <div class="lstat"><div class="lstat-num">11</div><div class="lstat-label">Negocios</div></div>
-      <div class="lstat"><div class="lstat-num">9</div><div class="lstat-label">Videos</div></div>
+      <div class="lstat"><div class="lstat-num">12</div><div class="lstat-label">Negocios</div></div>
+      <div class="lstat"><div class="lstat-num">10</div><div class="lstat-label">Videos</div></div>
       <div class="lstat"><div class="lstat-num" style="color:#22C55E">Coins</div><div class="lstat-label">Activos</div></div>
     </div>
   </div>
@@ -670,7 +670,7 @@ async function fbLogout(){
 <!-- BOTTOM SHEET -->
 <div class="bs" id="bs">
   <div class="sh" onclick="toggleSheet()"></div>
-  <div class="bst" id="bst">Tus lugares en Yummap · 11 negocios</div>
+  <div class="bst" id="bst">Tus lugares en Yummap · 12 negocios</div>
   <div class="cs" id="csc"></div>
 </div>
 
@@ -1432,7 +1432,7 @@ const PLACES = [
     id:10, name:"Los Gómez", emoji:"🍺", score:"9.4", type:"restaurante",
     lat:21.1622758, lng:-86.8239767,
     sub:"Restaurante · Av. Carlos Nader, SM 3 · Cancún",
-    tags:["Cerveza fría","La Cheve","2.1 °C","Restaurante mexicano","Para llevar","Entrega a domicilio","Rodrigo recomienda"],
+    cerveza_c:2.1, tags:["Cerveza fría","La Cheve","2.1 °C","Restaurante mexicano","Para llevar","Entrega a domicilio","Rodrigo recomienda"],
     tiktok:"",
     video:"lacheve.m4v",
     creator_name:"Rodrigo Madera",creator_handle:"@rodrigobuenamadera",creator_avatar:"R",creator_color:"#FF5722",owner_videos:[],
@@ -1452,6 +1452,18 @@ const PLACES = [
     promos:[],
     reviews:[],
     creator:true, hours:"Lun-Mar 1pm-12am, Mié-Sáb 1pm-1am, Dom 10am-8pm", phone:""
+  },  {
+    id:12, name:"Nantai Sushi", emoji:"🍣", score:"—", type:"sushi",
+    lat:21.1489989, lng:-86.8192993,
+    sub:"Sushi · Plaza Azuna, Av. Sayil 915 · Cancún",
+    cerveza_c:2.1, tags:["Sushi","Japonesa","Cerveza fría","La Cheve","2.1 °C","Entrega a domicilio","Rodrigo recomienda"],
+    tiktok:"",
+    video:"lacheve3.m4v",
+    creator_name:"Rodrigo Madera",creator_handle:"@rodrigobuenamadera",creator_avatar:"R",creator_color:"#FF5722",owner_videos:[],
+    descripcion:"Sushi premium en Plaza Azuna (Av. Sayil 915, junto a Cloud-México). Sale en 'La Cheve' (parte 3), la serie de Buena Madera que mide con termómetro qué tan fría sirven la cerveza en Cancún. Resultado: la cerveza marcó 2.1 °C. Consumo en el lugar, para llevar y entrega a domicilio. $300-900 por persona. Amigable LGBTQ+.",
+    promos:[],
+    reviews:[],
+    creator:true, hours:"Lun-Dom 12:30pm-11pm", phone:""
   },
 ];
 
@@ -1962,7 +1974,7 @@ function makePinSVG(p, selected=false){
   const fs = selected ? 11 : 9;
   const efs = selected ? 13 : 11;
   // Use canvas-free approach: colored dot + name only (no emoji in SVG = no encoding issues)
-  const dotColor = p.type==='taqueria'?'#FF5722':p.type==='mariscos'?'#3B82F6':p.type==='cafe'?'#92400E':p.type==='pizza'?'#E11D48':p.type==='yucateca'?'#16A34A':p.type==='papas'?'#F59E0B':'#FF5722';
+  const dotColor = p.type==='taqueria'?'#FF5722':p.type==='mariscos'?'#3B82F6':p.type==='cafe'?'#92400E':p.type==='pizza'?'#E11D48':p.type==='yucateca'?'#16A34A':p.type==='papas'?'#F59E0B':p.type==='sushi'?'#DC2626':'#FF5722';
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h+8}">
     <rect rx="13" width="${w}" height="${h}" fill="${bg}" stroke="${border}" stroke-width="${selected?2.5:1.5}"/>
     <circle cx="14" cy="${h/2}" r="${h/2-5}" fill="${selected?border:'white'}" opacity="${selected?0.3:0.25}"/>
@@ -2624,6 +2636,7 @@ function handleSearch(q){
     (['pizza','pizzas','italiana'].some(k=>q.includes(k))&&p.type==='pizza') ||
     (['yucateca','yucateco','poc chuc','cochinita','panucho','salbut','desayuno'].some(k=>q.includes(k))&&p.type==='yucateca') ||
     (['cerveza','cheve','chela','birra','beer'].some(k=>q.includes(k))&&(p.tags||[]).includes('Cerveza fría')) ||
+    (['sushi','japonesa','japonés','japones','ramen'].some(k=>q.includes(k))&&p.type==='sushi') ||
     (['papa','papas','picaña','picana','carbón','carbon'].some(k=>q.includes(k))&&p.type==='papas')
   );
   const aiRow = q.length>2 ? aiAskRow(q) : '';
@@ -2633,7 +2646,7 @@ function handleSearch(q){
   }
   box.innerHTML = aiRow + results.map(p=>{
     const i = allP().indexOf(p);
-    const typeLabel = p.type==='taqueria'?'Tacos':p.type==='mariscos'?'Mariscos':p.type==='cafe'?'Café':p.type==='pizza'?'Pizza':p.type==='yucateca'?'Yucateca':p.type==='papas'?'Papas':'Restaurante';
+    const typeLabel = p.type==='taqueria'?'Tacos':p.type==='mariscos'?'Mariscos':p.type==='cafe'?'Café':p.type==='pizza'?'Pizza':p.type==='yucateca'?'Yucateca':p.type==='papas'?'Papas':p.type==='sushi'?'Sushi':'Restaurante';
     return '<div class="sr-item" onclick="selectSearchResult('+i+')">'+
       '<div class="sr-emoji">'+p.emoji+'</div>'+
       '<div class="sr-info"><div class="sr-name">'+p.name+'</div>'+
@@ -2675,6 +2688,7 @@ async function askAI(q){
     horario: p.hours||'', descripcion: p.descripcion||'',
     promos: (p.promos||[]).map(x=>[x.title,x.desc].filter(Boolean).join(': ')),
     menu: (p.menu||[]).map(x=>[x.nombre||x.name, x.precio||x.price].filter(Boolean).join(' $')),
+    cerveza_c: typeof p.cerveza_c==='number' ? p.cerveza_c : undefined,
     km: me && p.lat ? kmTo(me, p.lat, p.lng) : undefined
   }));
   try{
